@@ -52,6 +52,15 @@ export const databases = new Proxy(
       hasArrays: false,
       beta: true,
     },
+    [DB.MONGODB]: {
+      name: "MongoDB",
+      label: DB.MONGODB,
+      image: null,
+      hasTypes: false,
+      hasEnums: false,
+      hasArrays: true,
+      beta: true,
+    },
     [DB.GENERIC]: {
       name: i18n.t("generic"),
       label: DB.GENERIC,

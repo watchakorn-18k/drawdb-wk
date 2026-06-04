@@ -19,6 +19,8 @@ import {
 } from "../../../hooks";
 import { isRtl } from "../../../i18n/utils/rtl";
 import { importSQL } from "../../../utils/importSQL";
+import { fromMongoDB } from "../../../utils/importSQL/mongodb";
+import { arrangeTables } from "../../../utils/arrangeTables";
 import {
   getModalTitle,
   getModalWidth,
@@ -99,39 +101,8 @@ export default function Modal({
     }
   };
 
-  const parseSQLAndLoadDiagram = () => {
-    const targetDatabase = database === DB.GENERIC ? importDb : database;
-
-    let ast = null;
-    try {
-      if (targetDatabase === DB.ORACLESQL) {
-        const oracleParser = new OracleParser();
-
-        ast = oracleParser.parse(importSource.src);
-      } else {
-        const parser = new Parser();
-
-        ast = parser.astify(importSource.src, {
-          database: targetDatabase,
-        });
-      }
-    } catch (error) {
-      const message = error.location
-        ? `${error.name} [Ln ${error.location.start.line}, Col ${error.location.start.column}]: ${error.message}`
-        : error.message;
-
-      setError({ type: STATUS.ERROR, message });
-      return;
-    }
-
-    try {
-      const diagramData = importSQL(
-        ast,
-        database === DB.GENERIC ? importDb : database,
-        database,
-      );
-
-      if (importSource.overwrite) {
+  const applyDiagramData = (diagramData) => {
+    if (importSource.overwrite) {
         setTables(diagramData.tables);
         setRelationships(diagramData.relationships);
         if (databases[database].hasTypes) setTypes(diagramData.types ?? []);
@@ -157,12 +128,68 @@ export default function Modal({
       setRedoStack([]);
 
       setModal(MODAL.NONE);
+  };
+
+  const parseMongoAndLoadDiagram = () => {
+    let diagramData;
+    try {
+      const json = JSON.parse(importSource.src);
+      diagramData = fromMongoDB(json);
+      arrangeTables(diagramData);
+    } catch (error) {
+      setError({ type: STATUS.ERROR, message: error.message });
+      return;
+    }
+
+    applyDiagramData(diagramData);
+  };
+
+  const parseSQLAndLoadDiagram = () => {
+    const targetDatabase = database === DB.GENERIC ? importDb : database;
+
+    if (targetDatabase === DB.MONGODB) {
+      parseMongoAndLoadDiagram();
+      return;
+    }
+
+    let ast = null;
+    try {
+      if (targetDatabase === DB.ORACLESQL) {
+        const oracleParser = new OracleParser();
+
+        ast = oracleParser.parse(importSource.src);
+      } else {
+        const parser = new Parser();
+
+        ast = parser.astify(importSource.src, {
+          database: targetDatabase,
+        });
+      }
+    } catch (error) {
+      const message = error.location
+        ? `${error.name} [Ln ${error.location.start.line}, Col ${error.location.start.column}]: ${error.message}`
+        : error.message;
+
+      setError({ type: STATUS.ERROR, message });
+      return;
+    }
+
+    let diagramData;
+    try {
+      diagramData = importSQL(
+        ast,
+        database === DB.GENERIC ? importDb : database,
+        database,
+      );
     } catch (e) {
       setError({
         type: STATUS.ERROR,
         message: `Please check for syntax errors or let us know about the error.`,
       });
+      return;
     }
+
+    applyDiagramData(diagramData);
   };
 
   const getModalOnOk = async () => {
@@ -242,6 +269,7 @@ export default function Modal({
             setImportData={setImportSource}
             error={error}
             setError={setError}
+            database={database}
           />
         );
       case MODAL.NEW:

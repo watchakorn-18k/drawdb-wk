@@ -2244,6 +2244,156 @@ export const mariadbTypes = new Proxy(
   },
 );
 
+export const mongodbTypesBase = {
+  STRING: {
+    type: "STRING",
+    color: stringColor,
+    checkDefault: (field) => true,
+    hasCheck: false,
+    isSized: false,
+    hasPrecision: false,
+    hasQuotes: true,
+  },
+  OBJECTID: {
+    type: "OBJECTID",
+    color: networkIdColor,
+    checkDefault: (field) => /^[0-9a-fA-F]{24}$/.test(field.default),
+    hasCheck: false,
+    isSized: false,
+    hasPrecision: false,
+    noDefault: true,
+  },
+  UUID: {
+    type: "UUID",
+    color: networkIdColor,
+    checkDefault: (field) =>
+      /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(
+        field.default,
+      ),
+    hasCheck: false,
+    isSized: false,
+    hasPrecision: false,
+    hasQuotes: true,
+  },
+  NUMBER: {
+    type: "NUMBER",
+    color: intColor,
+    checkDefault: (field) => doubleRegex.test(field.default),
+    hasCheck: false,
+    isSized: false,
+    hasPrecision: false,
+  },
+  INT: {
+    type: "INT",
+    color: intColor,
+    checkDefault: (field) => intRegex.test(field.default),
+    hasCheck: false,
+    isSized: false,
+    hasPrecision: false,
+  },
+  LONG: {
+    type: "LONG",
+    color: intColor,
+    checkDefault: (field) => intRegex.test(field.default),
+    hasCheck: false,
+    isSized: false,
+    hasPrecision: false,
+  },
+  DOUBLE: {
+    type: "DOUBLE",
+    color: decimalColor,
+    checkDefault: (field) => doubleRegex.test(field.default),
+    hasCheck: false,
+    isSized: false,
+    hasPrecision: false,
+  },
+  DECIMAL: {
+    type: "DECIMAL",
+    color: decimalColor,
+    checkDefault: (field) => doubleRegex.test(field.default),
+    hasCheck: false,
+    isSized: false,
+    hasPrecision: false,
+  },
+  BOOL: {
+    type: "BOOL",
+    color: booleanColor,
+    checkDefault: (field) =>
+      field.default.toLowerCase() === "true" ||
+      field.default.toLowerCase() === "false",
+    hasCheck: false,
+    isSized: false,
+    hasPrecision: false,
+  },
+  DATE: {
+    type: "DATE",
+    color: dateColor,
+    checkDefault: (field) => true,
+    hasCheck: false,
+    isSized: false,
+    hasPrecision: false,
+    hasQuotes: true,
+  },
+  TIMESTAMP: {
+    type: "TIMESTAMP",
+    color: dateColor,
+    checkDefault: (field) => true,
+    hasCheck: false,
+    isSized: false,
+    hasPrecision: false,
+    hasQuotes: true,
+  },
+  OBJECT: {
+    type: "OBJECT",
+    color: documentColor,
+    checkDefault: (field) => true,
+    hasCheck: false,
+    isSized: false,
+    hasPrecision: false,
+    noDefault: true,
+  },
+  ARRAY: {
+    type: "ARRAY",
+    color: documentColor,
+    checkDefault: (field) => true,
+    hasCheck: false,
+    isSized: false,
+    hasPrecision: false,
+    noDefault: true,
+  },
+  BINDATA: {
+    type: "BINDATA",
+    color: binaryColor,
+    checkDefault: (field) => true,
+    hasCheck: false,
+    isSized: false,
+    hasPrecision: false,
+    noDefault: true,
+  },
+  NULL: {
+    type: "NULL",
+    color: otherColor,
+    checkDefault: (field) => field.default.toLowerCase() === "null",
+    hasCheck: false,
+    isSized: false,
+    hasPrecision: false,
+    noDefault: true,
+  },
+  REGEX: {
+    type: "REGEX",
+    color: stringColor,
+    checkDefault: (field) => true,
+    hasCheck: false,
+    isSized: false,
+    hasPrecision: false,
+    hasQuotes: true,
+  },
+};
+
+export const mongodbTypes = new Proxy(mongodbTypesBase, {
+  get: (target, prop) => (prop in target ? target[prop] : false),
+});
+
 const dbToTypesBase = {
   [DB.GENERIC]: defaultTypes,
   [DB.MYSQL]: mysqlTypes,
@@ -2252,6 +2402,7 @@ const dbToTypesBase = {
   [DB.MSSQL]: mssqlTypes,
   [DB.MARIADB]: mariadbTypes,
   [DB.ORACLESQL]: oraclesqlTypes,
+  [DB.MONGODB]: mongodbTypes,
 };
 
 export const dbToTypes = new Proxy(dbToTypesBase, {

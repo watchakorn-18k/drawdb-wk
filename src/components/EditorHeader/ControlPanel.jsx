@@ -1125,7 +1125,7 @@ export default function ControlPanel({
           setExportData((prev) => ({
             ...prev,
             data: src,
-            extension: "sql",
+            extension: database === DB.MONGODB ? "json" : "sql",
           }));
         },
       },

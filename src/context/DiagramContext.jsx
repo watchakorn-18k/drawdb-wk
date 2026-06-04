@@ -44,8 +44,13 @@ export default function DiagramContextProvider({ children }) {
       locked: false,
       fields: [
         {
-          name: "id",
-          type: database === DB.GENERIC ? "INT" : "INTEGER",
+          name: database === DB.MONGODB ? "_id" : "id",
+          type:
+            database === DB.MONGODB
+              ? "OBJECTID"
+              : database === DB.GENERIC
+                ? "INT"
+                : "INTEGER",
           default: "",
           check: "",
           primary: true,

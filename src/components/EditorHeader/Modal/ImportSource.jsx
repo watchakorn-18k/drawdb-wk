@@ -1,5 +1,5 @@
 import { Upload, Checkbox, Banner, Tabs, TabPane } from "@douyinfe/semi-ui";
-import { STATUS } from "../../../data/constants";
+import { DB, STATUS } from "../../../data/constants";
 import { useTranslation } from "react-i18next";
 import CodeEditor from "../../CodeEditor";
 
@@ -8,8 +8,10 @@ export default function ImportSource({
   setImportData,
   error,
   setError,
+  database,
 }) {
   const { t } = useTranslation();
+  const isMongo = database === DB.MONGODB;
 
   return (
     <div>
@@ -17,7 +19,7 @@ export default function ImportSource({
         <TabPane tab={t("insert_sql")} itemKey="text-import">
           <CodeEditor
             height={224}
-            language="sql"
+            language={isMongo ? "json" : "sql"}
             onChange={(value) => {
               setImportData((prev) => ({ ...prev, src: value }));
               setError({
@@ -51,7 +53,7 @@ export default function ImportSource({
             draggable={true}
             dragMainText={t("drag_and_drop_files")}
             dragSubText={t("upload_sql_to_generate_diagrams")}
-            accept=".sql"
+            accept={isMongo ? ".json" : ".sql"}
             onRemove={() => {
               setError({
                 type: STATUS.NONE,
