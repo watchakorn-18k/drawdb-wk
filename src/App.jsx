@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { HashRouter, Routes, Route, useLocation } from "react-router-dom";
 import { useLayoutEffect } from "react";
 import Editor from "./pages/Editor";
 import BugReport from "./pages/BugReport";
@@ -9,7 +9,7 @@ import NotFound from "./pages/NotFound";
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <SettingsContextProvider>
         <RestoreScroll />
         <Routes>
@@ -22,7 +22,7 @@ export default function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </SettingsContextProvider>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 
