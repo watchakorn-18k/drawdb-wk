@@ -12,15 +12,15 @@
 <br/>
 
 <div align="center">
-    <img width="64" alt="drawDB logo" src="./src/assets/icon-dark.png">
-    <h1>drawDB</h1>
+    <img width="64" alt="drawDB WK logo" src="./src/assets/icon-dark.png">
+    <h1>drawDB WK</h1>
 </div>
 
 <h3 align="center">Free, simple, and intuitive database schema editor and SQL generator.</h3>
 
 <div align="center" style="margin-bottom:12px;">
     <a href="https://drawdb.app/" style="display: flex; align-items: center;">
-        <img src="https://img.shields.io/badge/Start%20building-grey" alt="drawDB"/>
+        <img src="https://img.shields.io/badge/Start%20building-grey" alt="drawDB WK"/>
     </a>
     <a href="https://discord.gg/BrjZgNrmR6" style="display: flex; align-items: center;">
         <img src="https://img.shields.io/discord/1196658537208758412.svg?label=Join%20the%20Discord&logo=discord" alt="Discord"/>
@@ -30,7 +30,7 @@
     </a>
 </div>
 
-<h3 align="center"><img width="700" style="border-radius:5px;" alt="drawDB screenshot demo" src="drawdb.png"></h3>
+<h3 align="center"><img width="700" style="border-radius:5px;" alt="drawDB WK screenshot demo" src="drawdb.png"></h3>
 
 DrawDB is a robust and user-friendly database entity relationship diagram (ERD) editor right in your browser. Build diagrams with a few clicks, export and import SQL scripts, generate migrations, customize your editor, and more without creating an account. See the full set of features on [here](https://drawdb.app/).
 

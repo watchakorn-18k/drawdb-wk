@@ -38,7 +38,7 @@ export default function LandingPage() {
 
     document.body.setAttribute("theme-mode", "light");
     document.title =
-      "drawDB | Online database diagram editor and SQL generator";
+      "drawDB WK | Online database diagram editor and SQL generator";
 
     fetchStats();
   }, []);
@@ -195,7 +195,7 @@ export default function LandingPage() {
             More than just an editor
           </div>
           <div className="text-2xl mt-1 font-medium text-center">
-            What drawDB has to offer
+            What drawDB WK has to offer
           </div>
           <div className="grid grid-cols-3 gap-8 mt-10 md:grid-cols-2 sm:grid-cols-1">
             {features.map((f, i) => (
@@ -317,7 +317,7 @@ export default function LandingPage() {
       </div>
       <hr className="border-zinc-300" />
       <div className="text-center text-sm py-3">
-        &copy; {new Date().getFullYear()} <strong>drawDB</strong> - All rights
+        &copy; {new Date().getFullYear()} <strong>drawDB WK</strong> - All rights
         reserved.
       </div>
     </div>

@@ -31,7 +31,7 @@ Undo/redo is two plain arrays (`undoStack`/`redoStack`) in `UndoRedoContext`. Mu
 
 ### Persistence
 
-`src/data/db.js` defines a Dexie (IndexedDB) database `drawDB` with `diagrams` and `templates` tables. **Bumping the schema requires incrementing the `db.version(N)` number and adding an `.upgrade()` migration** (current version is high — 67). `templates` are seeded on populate from `src/data/seeds.js`.
+`src/data/db.js` defines a Dexie (IndexedDB) database `drawDB WK` with `diagrams` and `templates` tables. **Bumping the schema requires incrementing the `db.version(N)` number and adding an `.upgrade()` migration** (current version is high — 67). `templates` are seeded on populate from `src/data/seeds.js`.
 
 `src/components/Workspace.jsx` is the central orchestrator: its `save()`/`load()` callbacks map context state <-> Dexie records (note `relationships` is stored as `references`), handle autosave (driven by `SaveStateContext` + `settings.autosave`), gist sharing (`src/api/gists.js`), and loading templates/diagrams/shared gists by route. Save logic branches on a `cloudSave` extension (see below) before falling back to Dexie.
 

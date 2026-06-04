@@ -1,7 +1,7 @@
 import Dexie from "dexie";
 import { templateSeeds } from "./seeds";
 
-export const db = new Dexie("drawDB");
+export const db = new Dexie("drawDB WK");
 
 db.version(67)
   .stores({

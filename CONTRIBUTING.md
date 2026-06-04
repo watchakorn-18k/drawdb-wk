@@ -1,4 +1,4 @@
-# Contributing to drawDB
+# Contributing to drawDB WK
 
 Thanks for taking the time to contribute!
 
