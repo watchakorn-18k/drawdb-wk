@@ -77,6 +77,7 @@ import { databases } from "../../data/databases";
 import { jsonToMermaid } from "../../utils/exportAs/mermaid";
 import { isRtl } from "../../i18n/utils/rtl";
 import { jsonToDocumentation } from "../../utils/exportAs/documentation";
+import { jsonToLLMPrompt } from "../../utils/exportAs/llm";
 import { IdContext } from "../Workspace";
 import { socials } from "../../data/socials";
 import { toDBML } from "../../utils/exportAs/dbml";
@@ -235,6 +236,10 @@ export default function ControlPanel({
           updatedFields.splice(a.data.index, 0, a.data.field);
           updateTable(a.tid, { fields: updatedFields });
         } else if (a.component === "field_add") {
+          updateTable(a.tid, {
+            fields: table.fields.filter((e) => e.id !== a.fid),
+          });
+        } else if (a.component === "field_duplicate") {
           updateTable(a.tid, {
             fields: table.fields.filter((e) => e.id !== a.fid),
           });
@@ -414,6 +419,10 @@ export default function ControlPanel({
               },
             ],
           });
+        } else if (a.component === "field_duplicate") {
+          const updatedFields = table.fields.slice();
+          updatedFields.splice(a.data.index, 0, a.data.field);
+          updateTable(a.tid, { fields: updatedFields });
         } else if (a.component === "index_add") {
           updateTable(a.tid, {
             indices: [
@@ -1280,6 +1289,27 @@ export default function ControlPanel({
               }));
             },
           },
+          {
+            name: "LLM Prompt",
+            function: () => {
+              openExportModal(MODAL.CODE);
+              const result = jsonToLLMPrompt({
+                tables: tables,
+                relationships: relationships,
+                notes: notes,
+                subjectAreas: areas,
+                database: database,
+                title: title,
+                ...(databases[database].hasTypes && { types: types }),
+                ...(databases[database].hasEnums && { enums: enums }),
+              });
+              setExportData((prev) => ({
+                ...prev,
+                data: result,
+                extension: "md",
+              }));
+            },
+          },
         ],
         function: () => {},
       },
@@ -1646,6 +1676,7 @@ export default function ControlPanel({
                   className="!text-base !pe-6 !ps-5 !py-[18px] !rounded-md"
                   size="default"
                   icon={<IconShareStroked />}
+                  disabled
                   onClick={() => setModal(MODAL.SHARE)}
                 >
                   {t("share")}

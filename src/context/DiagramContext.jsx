@@ -185,6 +185,42 @@ export default function DiagramContextProvider({ children }) {
     }
   };
 
+  const duplicateField = (field, tid, addToHistory = true) => {
+    const { fields, name } = tables.find((t) => t.id === tid);
+    const fieldIndex = fields.findIndex((f) => f.id === field.id);
+    const duplicatedField = {
+      ...field,
+      id: nanoid(),
+      name: `${field.name}_copy`,
+    };
+    const updatedFields = fields.slice();
+    updatedFields.splice(fieldIndex + 1, 0, duplicatedField);
+
+    if (addToHistory) {
+      setUndoStack((prev) => [
+        ...prev,
+        {
+          action: Action.EDIT,
+          element: ObjectType.TABLE,
+          component: "field_duplicate",
+          tid: tid,
+          fid: duplicatedField.id,
+          data: {
+            field: duplicatedField,
+            index: fieldIndex + 1,
+          },
+          message: t("edit_table", {
+            tableName: name,
+            extra: "[duplicate field]",
+          }),
+        },
+      ]);
+      setRedoStack([]);
+    }
+
+    updateTable(tid, { fields: updatedFields });
+  };
+
   const deleteField = (field, tid, addToHistory = true) => {
     const { fields, name } = tables.find((t) => t.id === tid);
     if (addToHistory) {
@@ -330,6 +366,7 @@ export default function DiagramContextProvider({ children }) {
         addTable,
         updateTable,
         updateField,
+        duplicateField,
         deleteField,
         deleteTable,
         relationships,

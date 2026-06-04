@@ -8,7 +8,7 @@ import {
   Checkbox,
 } from "@douyinfe/semi-ui";
 import { Action, DB, ObjectType } from "../../../data/constants";
-import { IconDeleteStroked } from "@douyinfe/semi-icons";
+import { IconCopy, IconDeleteStroked } from "@douyinfe/semi-icons";
 import { useDiagram, useLayout, useUndoRedo } from "../../../hooks";
 import { useTranslation } from "react-i18next";
 import { databases } from "../../../data/databases";
@@ -21,7 +21,7 @@ export default function FieldDetails({ data, tid }) {
   const { tables, database } = useDiagram();
   const resolved = resolveType(database, data.type);
   const { setUndoStack, setRedoStack } = useUndoRedo();
-  const { updateField, deleteField } = useDiagram();
+  const { updateField, duplicateField, deleteField } = useDiagram();
   const [editField, setEditField] = useState({});
   const table = useMemo(() => tables.find((t) => t.id === tid), [tables, tid]);
 
@@ -420,6 +420,15 @@ export default function FieldDetails({ data, tid }) {
           setRedoStack([]);
         }}
       />
+      <Button
+        icon={<IconCopy />}
+        block
+        disabled={layout.readOnly}
+        className="mb-2"
+        onClick={() => duplicateField(data, tid)}
+      >
+        {t("duplicate")}
+      </Button>
       <Button
         icon={<IconDeleteStroked />}
         type="danger"
