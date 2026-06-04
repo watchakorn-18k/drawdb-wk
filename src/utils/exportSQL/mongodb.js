@@ -17,28 +17,40 @@ const bsonTypeMap = {
   REGEX: "regex",
 };
 
+function buildObjectSchema(fields) {
+  const properties = {};
+  for (const field of fields) {
+    if (!field.name) continue;
+    properties[field.name] = fieldToProperty(field);
+  }
+
+  const required = fields
+    .filter((field) => field.notNull && field.name)
+    .map((field) => field.name);
+
+  return {
+    bsonType: "object",
+    ...(required.length ? { required } : {}),
+    properties,
+  };
+}
+
 function fieldToProperty(field) {
   const property = { bsonType: bsonTypeMap[field.type] ?? "string" };
   if (field.comment) property.description = field.comment;
+
+  if (field.type === "OBJECT" && field.fields?.length) {
+    Object.assign(property, buildObjectSchema(field.fields));
+  } else if (field.type === "ARRAY" && field.fields?.length) {
+    property.items = buildObjectSchema(field.fields);
+  }
+
   return property;
 }
 
 function tableToValidator(table) {
-  const properties = {};
-  for (const field of table.fields) {
-    properties[field.name] = fieldToProperty(field);
-  }
-
-  const required = table.fields
-    .filter((field) => field.notNull)
-    .map((field) => field.name);
-
   const schema = {
-    $jsonSchema: {
-      bsonType: "object",
-      ...(required.length ? { required } : {}),
-      properties,
-    },
+    $jsonSchema: buildObjectSchema(table.fields),
   };
 
   return `db.createCollection("${table.name}", {\n  validator: ${JSON.stringify(

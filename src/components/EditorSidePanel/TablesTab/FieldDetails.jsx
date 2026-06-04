@@ -7,12 +7,13 @@ import {
   InputNumber,
   Checkbox,
 } from "@douyinfe/semi-ui";
-import { Action, ObjectType } from "../../../data/constants";
+import { Action, DB, ObjectType } from "../../../data/constants";
 import { IconDeleteStroked } from "@douyinfe/semi-icons";
 import { useDiagram, useLayout, useUndoRedo } from "../../../hooks";
 import { useTranslation } from "react-i18next";
 import { databases } from "../../../data/databases";
 import { resolveType } from "../../../utils/customTypes";
+import EmbeddedFields from "./EmbeddedFields";
 
 export default function FieldDetails({ data, tid }) {
   const { t } = useTranslation();
@@ -350,7 +351,40 @@ export default function FieldDetails({ data, tid }) {
             />
           </div>
         )}
-      <div className="font-semibold">{t("comment")}</div>
+      {database === DB.MONGODB &&
+        (data.type === "OBJECT" || data.type === "ARRAY") && (
+          <>
+            <div className="font-semibold mb-1">
+              {data.type === "ARRAY" ? t("array_items") : t("embedded_fields")}
+            </div>
+            <EmbeddedFields
+              value={data.fields}
+              database={database}
+              readOnly={layout.readOnly}
+              onChange={(fields) => {
+                setUndoStack((prev) => [
+                  ...prev,
+                  {
+                    action: Action.EDIT,
+                    element: ObjectType.TABLE,
+                    component: "field",
+                    tid: tid,
+                    fid: data.id,
+                    undo: { fields: data.fields },
+                    redo: { fields },
+                    message: t("edit_table", {
+                      tableName: table.name,
+                      extra: "[field]",
+                    }),
+                  },
+                ]);
+                setRedoStack([]);
+                updateField(tid, data.id, { fields });
+              }}
+            />
+          </>
+        )}
+      <div className="font-semibold mt-3">{t("comment")}</div>
       <TextArea
         className="my-2"
         placeholder={t("comment")}

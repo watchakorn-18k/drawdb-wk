@@ -25,28 +25,44 @@ function unwrapSchema(value) {
   return value;
 }
 
-function schemaToTable(name, rawSchema) {
-  const schema = unwrapSchema(rawSchema);
-  const properties = schema?.properties ?? {};
-  const required = new Set(schema?.required ?? []);
+function propertiesToFields(properties, required) {
+  const requiredSet = new Set(required ?? []);
 
-  const fields = Object.entries(properties).map(([fieldName, property]) => {
+  return Object.entries(properties).map(([fieldName, property]) => {
     const bsonType = Array.isArray(property.bsonType)
       ? property.bsonType[0]
       : property.bsonType;
-    return {
+    const type = typeFromBson[bsonType] ?? "STRING";
+
+    const field = {
       id: nanoid(),
       name: fieldName,
-      type: typeFromBson[bsonType] ?? "STRING",
+      type,
       default: "",
       check: "",
       primary: fieldName === "_id",
       unique: fieldName === "_id",
-      notNull: required.has(fieldName),
+      notNull: requiredSet.has(fieldName),
       increment: false,
       comment: property.description ?? "",
     };
+
+    if (type === "OBJECT" && property.properties) {
+      field.fields = propertiesToFields(property.properties, property.required);
+    } else if (type === "ARRAY" && property.items?.properties) {
+      field.fields = propertiesToFields(
+        property.items.properties,
+        property.items.required,
+      );
+    }
+
+    return field;
   });
+}
+
+function schemaToTable(name, rawSchema) {
+  const schema = unwrapSchema(rawSchema);
+  const fields = propertiesToFields(schema?.properties ?? {}, schema?.required);
 
   return {
     id: nanoid(),
