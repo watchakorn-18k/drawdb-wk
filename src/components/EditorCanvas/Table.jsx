@@ -444,6 +444,12 @@ export default function Table({
                       <strong>{t("comment")}: </strong>
                       {e.comment === "" ? t("not_set") : e.comment}
                     </p>
+                    {e.fields?.length ? (
+                      <div className="mt-2 max-w-80">
+                        <strong>{t("embedded_fields")}: </strong>
+                        <EmbeddedFieldsTree fields={e.fields} />
+                      </div>
+                    ) : null}
                   </div>
                 }
                 position="right"
@@ -557,9 +563,29 @@ export default function Table({
                 }));
               }}
             />
-            <span className="overflow-hidden text-ellipsis whitespace-nowrap">
-              {fieldData.name}
-            </span>
+            {fieldData.fields?.length && !settings.showFieldSummary ? (
+              <Popover
+                showArrow
+                position="right"
+                content={
+                  <div className="popover-theme p-2 max-w-[260px]">
+                    <EmbeddedFieldsTree fields={fieldData.fields} />
+                  </div>
+                }
+              >
+                <span className="overflow-hidden text-ellipsis whitespace-nowrap underline decoration-dotted cursor-help">
+                  {fieldData.name}
+                </span>
+              </Popover>
+            ) : (
+              <span
+                className={`overflow-hidden text-ellipsis whitespace-nowrap ${
+                  fieldData.fields?.length ? "underline decoration-dotted" : ""
+                }`}
+              >
+                {fieldData.name}
+              </span>
+            )}
           </div>
           <div className="text-zinc-400">
             {hoveredField === index ? (
@@ -612,4 +638,29 @@ export default function Table({
       </div>
     );
   }
+}
+
+function EmbeddedFieldsTree({ fields }) {
+  return (
+    <ul className="list-none ps-0 m-0">
+      {fields.map((field) => (
+        <li key={field.id} className="text-xs">
+          <div className="h-[22px] flex items-center overflow-hidden">
+            <span className="font-mono text-ellipsis whitespace-nowrap overflow-hidden">
+              {field.name || "—"}
+            </span>
+            <span className="font-mono opacity-60 whitespace-nowrap">
+              {" : "}
+              {field.type}
+            </span>
+          </div>
+          {field.fields?.length ? (
+            <div className="ps-3 border-s border-zinc-300">
+              <EmbeddedFieldsTree fields={field.fields} />
+            </div>
+          ) : null}
+        </li>
+      ))}
+    </ul>
+  );
 }

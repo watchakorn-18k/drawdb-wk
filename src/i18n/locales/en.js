@@ -31,6 +31,7 @@ const en = {
     import_from_source: "Import from SQL",
     export_as: "Export as",
     export_source: "Export SQL",
+    export_mongo: "Export MongoDB",
     models: "Models",
     exit: "Exit",
     edit: "Edit",

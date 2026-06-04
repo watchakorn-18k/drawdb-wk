@@ -28,7 +28,7 @@ import {
   useNavigateWithParams,
 } from "../hooks";
 import FloatingControls from "./FloatingControls";
-import { Button, Modal, Tag } from "@douyinfe/semi-ui";
+import { Button, Modal } from "@douyinfe/semi-ui";
 import { IconAlertTriangle } from "@douyinfe/semi-icons";
 import { useTranslation } from "react-i18next";
 import { databases } from "../data/databases";
@@ -622,14 +622,7 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
                   : "bg-zinc-100 hover:bg-zinc-200"
               } ${selectedDb === x.label ? "border-zinc-400" : "border-transparent"}`}
             >
-              <div className="flex items-center justify-between">
-                <div className="font-semibold">{x.name}</div>
-                {x.beta && (
-                  <Tag size="small" color="light-blue">
-                    Beta
-                  </Tag>
-                )}
-              </div>
+              <div className="font-semibold">{x.name}</div>
               {x.image && (
                 <img
                   src={x.image}

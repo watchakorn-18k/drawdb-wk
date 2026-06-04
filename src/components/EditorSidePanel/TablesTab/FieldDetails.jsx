@@ -208,73 +208,81 @@ export default function FieldDetails({ data, tid }) {
           <div className="text-xs mt-1">{t("this_will_appear_as_is")}</div>
         </>
       )}
-      <div className="flex justify-between items-center my-3">
-        <div className="font-medium">{t("unique")}</div>
-        <Checkbox
-          value="unique"
-          checked={data.unique}
-          disabled={layout.readOnly}
-          onChange={(checkedValues) => {
-            setUndoStack((prev) => [
-              ...prev,
-              {
-                action: Action.EDIT,
-                element: ObjectType.TABLE,
-                component: "field",
-                tid: tid,
-                fid: data.id,
-                undo: {
-                  [checkedValues.target.value]: !checkedValues.target.checked,
-                },
-                redo: {
+      {database !== DB.MONGODB && (
+        <>
+          <div className="flex justify-between items-center my-3">
+            <div className="font-medium">{t("unique")}</div>
+            <Checkbox
+              value="unique"
+              checked={data.unique}
+              disabled={layout.readOnly}
+              onChange={(checkedValues) => {
+                setUndoStack((prev) => [
+                  ...prev,
+                  {
+                    action: Action.EDIT,
+                    element: ObjectType.TABLE,
+                    component: "field",
+                    tid: tid,
+                    fid: data.id,
+                    undo: {
+                      [checkedValues.target.value]:
+                        !checkedValues.target.checked,
+                    },
+                    redo: {
+                      [checkedValues.target.value]:
+                        checkedValues.target.checked,
+                    },
+                  },
+                ]);
+                setRedoStack([]);
+                updateField(tid, data.id, {
                   [checkedValues.target.value]: checkedValues.target.checked,
-                },
-              },
-            ]);
-            setRedoStack([]);
-            updateField(tid, data.id, {
-              [checkedValues.target.value]: checkedValues.target.checked,
-            });
-          }}
-        />
-      </div>
-      <div className="flex justify-between items-center my-3">
-        <div className="font-medium">{t("autoincrement")}</div>
-        <Checkbox
-          value="increment"
-          checked={data.increment}
-          disabled={
-            !resolved.canIncrement || data.isArray || layout.readOnly
-          }
-          onChange={(checkedValues) => {
-            setUndoStack((prev) => [
-              ...prev,
-              {
-                action: Action.EDIT,
-                element: ObjectType.TABLE,
-                component: "field",
-                tid: tid,
-                fid: data.id,
-                undo: {
-                  [checkedValues.target.value]: !checkedValues.target.checked,
-                },
-                redo: {
-                  [checkedValues.target.value]: checkedValues.target.checked,
-                },
-                message: t("edit_table", {
-                  tableName: table.name,
-                  extra: "[field]",
-                }),
-              },
-            ]);
-            setRedoStack([]);
-            updateField(tid, data.id, {
-              increment: !data.increment,
-              check: data.increment ? data.check : "",
-            });
-          }}
-        />
-      </div>
+                });
+              }}
+            />
+          </div>
+          <div className="flex justify-between items-center my-3">
+            <div className="font-medium">{t("autoincrement")}</div>
+            <Checkbox
+              value="increment"
+              checked={data.increment}
+              disabled={
+                !resolved.canIncrement || data.isArray || layout.readOnly
+              }
+              onChange={(checkedValues) => {
+                setUndoStack((prev) => [
+                  ...prev,
+                  {
+                    action: Action.EDIT,
+                    element: ObjectType.TABLE,
+                    component: "field",
+                    tid: tid,
+                    fid: data.id,
+                    undo: {
+                      [checkedValues.target.value]:
+                        !checkedValues.target.checked,
+                    },
+                    redo: {
+                      [checkedValues.target.value]:
+                        checkedValues.target.checked,
+                    },
+                    message: t("edit_table", {
+                      tableName: table.name,
+                      extra: "[field]",
+                    }),
+                  },
+                ]);
+                setRedoStack([]);
+                updateField(tid, data.id, {
+                  increment: !data.increment,
+                  check: data.increment ? data.check : "",
+                });
+              }}
+            />
+          </div>
+        </>
+      )}
       {databases[database].hasArrays && (
         <div className="flex justify-between items-center my-3">
           <div className="font-medium">{t("declare_array")}</div>
@@ -312,45 +320,42 @@ export default function FieldDetails({ data, tid }) {
           />
         </div>
       )}
-      {databases[database].hasUnsignedTypes &&
-        resolved.signed && (
-          <div className="flex justify-between items-center my-3">
-            <div className="font-medium">{t("Unsigned")}</div>
-            <Checkbox
-              value="unsigned"
-              checked={data.unsigned}
-              disabled={layout.readOnly}
-              onChange={(checkedValues) => {
-                setUndoStack((prev) => [
-                  ...prev,
-                  {
-                    action: Action.EDIT,
-                    element: ObjectType.TABLE,
-                    component: "field",
-                    tid: tid,
-                    fid: data.id,
-                    undo: {
-                      [checkedValues.target.value]:
-                        !checkedValues.target.checked,
-                    },
-                    redo: {
-                      [checkedValues.target.value]:
-                        checkedValues.target.checked,
-                    },
-                    message: t("edit_table", {
-                      tableName: table.name,
-                      extra: "[field]",
-                    }),
+      {databases[database].hasUnsignedTypes && resolved.signed && (
+        <div className="flex justify-between items-center my-3">
+          <div className="font-medium">{t("Unsigned")}</div>
+          <Checkbox
+            value="unsigned"
+            checked={data.unsigned}
+            disabled={layout.readOnly}
+            onChange={(checkedValues) => {
+              setUndoStack((prev) => [
+                ...prev,
+                {
+                  action: Action.EDIT,
+                  element: ObjectType.TABLE,
+                  component: "field",
+                  tid: tid,
+                  fid: data.id,
+                  undo: {
+                    [checkedValues.target.value]: !checkedValues.target.checked,
                   },
-                ]);
-                setRedoStack([]);
-                updateField(tid, data.id, {
-                  unsigned: checkedValues.target.checked,
-                });
-              }}
-            />
-          </div>
-        )}
+                  redo: {
+                    [checkedValues.target.value]: checkedValues.target.checked,
+                  },
+                  message: t("edit_table", {
+                    tableName: table.name,
+                    extra: "[field]",
+                  }),
+                },
+              ]);
+              setRedoStack([]);
+              updateField(tid, data.id, {
+                unsigned: checkedValues.target.checked,
+              });
+            }}
+          />
+        </div>
+      )}
       {database === DB.MONGODB &&
         (data.type === "OBJECT" || data.type === "ARRAY") && (
           <>

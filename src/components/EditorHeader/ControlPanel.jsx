@@ -992,7 +992,6 @@ export default function ControlPanel({
                 setImportDb(DB.ORACLESQL);
               },
               name: "Oracle",
-              label: "Beta",
               disabled: layout.readOnly,
             },
           ],
@@ -1005,6 +1004,7 @@ export default function ControlPanel({
         disabled: layout.readOnly,
       },
       export_source: {
+        ...(database === DB.MONGODB && { title: t("export_mongo") }),
         ...(database === DB.GENERIC && {
           children: [
             {
@@ -1093,7 +1093,6 @@ export default function ControlPanel({
               },
             },
             {
-              label: "Beta",
               name: "Oracle",
               function: () => {
                 openExportModal(MODAL.CODE);
@@ -2030,7 +2029,7 @@ export default function ControlPanel({
                               }
                             >
                               <div className="w-full flex items-center justify-between">
-                                <div>{t(item)}</div>
+                                <div>{menu[category][item].title ?? t(item)}</div>
                                 <div className="flex items-center gap-1">
                                   {menu[category][item].shortcut && (
                                     <div className="text-gray-400">

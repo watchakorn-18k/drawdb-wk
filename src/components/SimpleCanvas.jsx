@@ -166,7 +166,7 @@ function Relationship({ relationship, tables }) {
   );
 }
 
-export default function SimpleCanvas({ diagram, zoom }) {
+export default function SimpleCanvas({ diagram, zoom, origin = { x: 0, y: 0 } }) {
   const [tables, setTables] = useState(diagram.tables);
   const [dragging, setDragging] = useState(-1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
@@ -231,7 +231,7 @@ export default function SimpleCanvas({ diagram, zoom }) {
       ></rect>
       <g
         style={{
-          transform: `scale(${zoom})`,
+          transform: `translate(${origin.x}px, ${origin.y}px) scale(${zoom})`,
           transformOrigin: "top left",
         }}
       >

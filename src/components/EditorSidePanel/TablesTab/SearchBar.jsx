@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useSelect } from "../../../hooks";
-import { TreeSelect } from "@douyinfe/semi-ui";
+import { Input, TreeSelect } from "@douyinfe/semi-ui";
 import { IconSearch } from "@douyinfe/semi-icons";
 import { ObjectType } from "../../../data/constants";
 import { useTranslation } from "react-i18next";
@@ -38,6 +38,9 @@ export default function SearchBar({ tables }) {
       prefix={<IconSearch />}
       emptyContent={<div className="p-3 popover-theme">{t("not_found")}</div>}
       filterTreeNode
+      searchRender={({ autofocus, ...props }) => (
+        <Input {...props} autoFocus={autofocus} />
+      )}
       placeholder={t("search")}
       onChange={(node) => {
         const { tableId, id, children } = node;

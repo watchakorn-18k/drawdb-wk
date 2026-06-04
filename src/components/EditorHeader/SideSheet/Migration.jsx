@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { Tabs, TabPane, Modal, Input, Tag, Spin } from "@douyinfe/semi-ui";
+import { Tabs, TabPane, Modal, Input, Spin } from "@douyinfe/semi-ui";
 import { DiffEditor } from "@monaco-editor/react";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -110,11 +110,7 @@ export default function Migration({
     <Modal
       centered
       size="medium"
-      title={
-        <div className="flex items-center gap-2">
-          {t("migrations")} <Tag color="blue">Beta</Tag>
-        </div>
-      }
+      title={t("migrations")}
       visible={!!selectedVersion}
       onCancel={() => setSelectedVersion(null)}
       onOk={handleConfirm}

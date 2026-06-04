@@ -72,6 +72,8 @@ const COMMENT_CACHE_LIMIT = 500;
 const TABLE_COMMENT_INSET = COMMENT_BORDERS + COMMENT_PADDING_X;
 const FIELD_COMMENT_INSET = TABLE_COMMENT_INSET + 12;
 const FIELD_BORDER_WIDTH = 1;
+const EMBEDDED_FIELD_ROW_HEIGHT = 22;
+const EMBEDDED_FIELDS_PADDING_BOTTOM = 4;
 
 const commentHeightCache = new Map();
 let commentMeasureCtx = null;
@@ -145,10 +147,27 @@ export function getCommentHeight(
   return height;
 }
 
+export function countEmbeddedRows(fields) {
+  if (!Array.isArray(fields)) return 0;
+
+  return fields.reduce(
+    (total, field) => total + 1 + countEmbeddedRows(field.fields),
+    0,
+  );
+}
+
+export function getEmbeddedFieldsHeight(field) {
+  const rows = countEmbeddedRows(field?.fields);
+  if (rows === 0) return 0;
+
+  return rows * EMBEDDED_FIELD_ROW_HEIGHT + EMBEDDED_FIELDS_PADDING_BOTTOM;
+}
+
 export function getFieldHeight(field, containerWidth, showComments = true) {
   return (
     tableFieldHeight +
     FIELD_BORDER_WIDTH +
+    getEmbeddedFieldsHeight(field) +
     getCommentHeight(
       field?.comment,
       containerWidth,

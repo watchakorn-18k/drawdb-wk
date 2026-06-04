@@ -48,20 +48,13 @@ function fieldToProperty(field) {
   return property;
 }
 
-function tableToValidator(table) {
-  const schema = {
-    $jsonSchema: buildObjectSchema(table.fields),
-  };
-
-  return `db.createCollection("${table.name}", {\n  validator: ${JSON.stringify(
-    schema,
-    null,
-    2,
-  )
-    .split("\n")
-    .join("\n  ")},\n});`;
-}
-
 export function toMongoDB(diagram) {
-  return diagram.tables.map(tableToValidator).join("\n\n");
+  const collections = {};
+  for (const table of diagram.tables) {
+    collections[table.name] = {
+      $jsonSchema: buildObjectSchema(table.fields),
+    };
+  }
+
+  return JSON.stringify(collections, null, 2);
 }
