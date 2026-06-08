@@ -15,7 +15,7 @@ import screenshot from "../assets/screenshot.png";
 import FadeIn from "../animations/FadeIn";
 import axios from "axios";
 import { languages } from "../i18n/i18n";
-import { Tweet } from "react-tweet";
+import SafeTweet from "../components/SafeTweet";
 import { socials } from "../data/socials";
 
 function shortenNumber(number) {
@@ -269,12 +269,12 @@ export default function LandingPage() {
             className="grid grid-cols-2 items-start gap-5 md:grid-cols-1"
           >
             <div className="space-y-5">
-              <Tweet id="1816111365125218343" />
-              <Tweet id="1785457354777006524" />
+              <SafeTweet id="1816111365125218343" />
+              <SafeTweet id="1785457354777006524" />
             </div>
             <div className="mt-14 space-y-5 md:mt-0">
-              <Tweet id="1817933406337905021" />
-              <Tweet id="1776842268042756248" />
+              <SafeTweet id="1817933406337905021" />
+              <SafeTweet id="1776842268042756248" />
             </div>
           </div>
         </div>
