@@ -37,7 +37,7 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: backend
-          command: d1 execute drawdb-db --remote --file=./schema.sql
+          command: d1 execute drawdb-db --remote --file=./schema.sql -y
 
       - name: Deploy Worker to Cloudflare
         uses: cloudflare/wrangler-action@v3
