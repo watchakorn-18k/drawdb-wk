@@ -46,8 +46,14 @@ export default function Canvas() {
     pointer,
   } = canvasContextValue;
 
-  const { tables, updateTable, relationships, addRelationship, database } =
-    useDiagram();
+  const {
+    tables,
+    updateTable,
+    relationships,
+    addRelationship,
+    database,
+    autoLayoutDiagram,
+  } = useDiagram();
   const { setSaveState } = useSaveState();
   const { areas, updateArea } = useAreas();
   const { notes, updateNote } = useNotes();
@@ -668,6 +674,17 @@ export default function Canvas() {
     delete newRelationship.endX;
     delete newRelationship.endY;
     addRelationship(newRelationship);
+
+    if (settings.autoLayoutOnConnect) {
+      setTimeout(() => {
+        autoLayoutDiagram({
+          direction: settings.autoLayoutDirection || "LR",
+          tableWidth: settings.tableWidth,
+          showComments: settings.showComments,
+          relationshipsOverride: [...relationships, newRelationship],
+        });
+      }, 50);
+    }
   };
 
   useEventListener(

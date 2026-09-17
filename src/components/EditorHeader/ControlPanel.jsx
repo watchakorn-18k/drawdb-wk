@@ -3,6 +3,7 @@ import { Slot, useExtensions } from "../../context/ExtensionsContext";
 import { createPortal } from "react-dom";
 import {
   IconCaretdown,
+  IconCheckboxTick,
   IconChevronRight,
   IconChevronLeft,
   IconSaveStroked,
@@ -134,6 +135,7 @@ export default function ControlPanel({
     deleteRelationship,
     updateRelationship,
     database,
+    autoLayoutDiagram,
   } = useDiagram();
   const { enums, setEnums, deleteEnum, addEnum, updateEnum } = useEnums();
   const { types, addType, deleteType, updateType, setTypes } = useTypes();
@@ -549,6 +551,15 @@ export default function ControlPanel({
         Toast.close(toastKey);
         Toast.error(t("oops_smth_went_wrong"));
       });
+  };
+  const handleAutoLayout = (direction = settings.autoLayoutDirection || "LR") => {
+    if (layout.readOnly || tables.length === 0) return;
+    autoLayoutDiagram({
+      direction,
+      tableWidth: settings.tableWidth,
+      showComments: settings.showComments,
+    });
+    Toast.success(t("layout_applied"));
   };
   const resetView = () =>
     setTransform((prev) => ({ ...prev, zoom: 1, pan: { x: 0, y: 0 } }));
@@ -1452,6 +1463,11 @@ export default function ControlPanel({
         function: copyAsImage,
         shortcut: "Ctrl+Alt+C",
       },
+      auto_layout: {
+        function: () => handleAutoLayout(),
+        shortcut: "Ctrl+Shift+L",
+        disabled: layout.readOnly || tables.length === 0,
+      },
     },
     view: {
       header: {
@@ -1586,6 +1602,18 @@ export default function ControlPanel({
           setSettings((prev) => ({
             ...prev,
             showRelationshipLabels: !prev.showRelationshipLabels,
+          })),
+      },
+      auto_layout_on_connect: {
+        state: settings.autoLayoutOnConnect ? (
+          <i className="bi bi-toggle-on" />
+        ) : (
+          <i className="bi bi-toggle-off" />
+        ),
+        function: () =>
+          setSettings((prev) => ({
+            ...prev,
+            autoLayoutOnConnect: !prev.autoLayoutOnConnect,
           })),
       },
       show_debug_coordinates: {
@@ -1729,6 +1757,9 @@ export default function ControlPanel({
   });
   useHotkeys("mod+alt+w", fitWindow, { preventDefault: true });
   useHotkeys("alt+e", toggleDBMLEditor, { preventDefault: true });
+  useHotkeys("mod+shift+l", () => handleAutoLayout(), {
+    preventDefault: true,
+  });
 
   return (
     <>
@@ -1913,6 +1944,62 @@ export default function ControlPanel({
               <IconAddNote />
             </button>
           </Tooltip>
+          <Divider layout="vertical" margin="8px" />
+          <Dropdown
+            position="bottomLeft"
+            style={{
+              width: "250px",
+              direction: isRtl(i18n.language) ? "rtl" : "ltr",
+            }}
+            render={
+              <Dropdown.Menu>
+                <Dropdown.Item
+                  onClick={() => handleAutoLayout("LR")}
+                  style={{ display: "flex", justifyContent: "space-between" }}
+                >
+                  <div>{t("auto_layout_lr")}</div>
+                  <div className="text-gray-400">Ctrl+Shift+L</div>
+                </Dropdown.Item>
+                <Dropdown.Item onClick={() => handleAutoLayout("TB")}>
+                  {t("auto_layout_tb")}
+                </Dropdown.Item>
+                <Dropdown.Item onClick={() => handleAutoLayout("GRID")}>
+                  {t("auto_layout_grid")}
+                </Dropdown.Item>
+                <Dropdown.Divider />
+                <Dropdown.Item
+                  icon={
+                    settings.autoLayoutOnConnect ? (
+                      <IconCheckboxTick />
+                    ) : (
+                      <div className="px-2" />
+                    )
+                  }
+                  onClick={() =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      autoLayoutOnConnect: !prev.autoLayoutOnConnect,
+                    }))
+                  }
+                >
+                  {t("auto_layout_on_connect")}
+                </Dropdown.Item>
+              </Dropdown.Menu>
+            }
+            trigger="click"
+          >
+            <div className="flex items-center">
+              <Tooltip content={t("auto_layout")} position="bottom">
+                <button
+                  className="py-1 px-2 hover-2 rounded-sm text-lg flex items-center gap-1 disabled:opacity-50"
+                  disabled={tables.length === 0 || layout.readOnly}
+                >
+                  <i className="fa-solid fa-diagram-project" />
+                  <IconCaretdown size="small" />
+                </button>
+              </Tooltip>
+            </div>
+          </Dropdown>
           <Divider layout="vertical" margin="8px" />
           <Tooltip content={t("save")} position="bottom">
             <button

@@ -1,27 +1,28 @@
-import {
-  tableColorStripHeight,
-  tableFieldHeight,
-  tableHeaderHeight,
-} from "../data/constants";
+import { computeAutoLayout } from "./autoLayout";
 
-export function arrangeTables(diagram) {
-  let maxHeight = -1;
-  const tableWidth = 200;
-  const gapX = 54;
-  const gapY = 40;
-  diagram.tables.forEach((table, i) => {
-    if (i < diagram.tables.length / 2) {
-      table.x = i * tableWidth + (i + 1) * gapX;
-      table.y = gapY;
-      const height =
-        table.fields.length * tableFieldHeight +
-        tableHeaderHeight +
-        tableColorStripHeight;
-      maxHeight = Math.max(height, maxHeight);
-    } else {
-      const index = diagram.tables.length - i - 1;
-      table.x = index * tableWidth + (index + 1) * gapX;
-      table.y = maxHeight + 2 * gapY;
+export function arrangeTables(diagram, options = {}) {
+  if (!diagram || !diagram.tables || diagram.tables.length === 0) return;
+
+  const relationships =
+    diagram.relationships || diagram.references || [];
+
+  const positions = computeAutoLayout({
+    tables: diagram.tables,
+    relationships,
+    direction: options.direction || "LR",
+    tableWidth: options.tableWidth,
+    showComments: options.showComments,
+    startX: options.startX || 60,
+    startY: options.startY || 60,
+  });
+
+  const posMap = new Map(positions.map((p) => [p.id, p]));
+  diagram.tables.forEach((table) => {
+    const pos = posMap.get(table.id);
+    if (pos) {
+      table.x = pos.x;
+      table.y = pos.y;
     }
   });
 }
+

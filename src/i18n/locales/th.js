@@ -234,6 +234,12 @@ const th = {
     failed_to_record_version: "บันทึกเวอร์ชันล้มเหลว",
     failed_to_load_diagram: "โหลดไดอะแกรมล้มเหลว",
     see_all: "ดูทั้งหมด",
+    auto_layout: "จัดผังอัตโนมัติ",
+    auto_layout_lr: "จัดผังอัตโนมัติ (แนวนอน)",
+    auto_layout_tb: "จัดผังอัตโนมัติ (แนวตั้ง)",
+    auto_layout_grid: "จัดผังแบบตาราง",
+    auto_layout_on_connect: "จัดตำแหน่งอัตโนมัติเมื่อโยงเส้น",
+    layout_applied: "จัดผังเรียบร้อยแล้ว",
   },
 };
 

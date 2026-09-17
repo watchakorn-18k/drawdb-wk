@@ -4,6 +4,7 @@ import { useTransform, useUndoRedo, useSelect, useCollab } from "../hooks";
 import { Toast } from "@douyinfe/semi-ui";
 import { useTranslation } from "react-i18next";
 import { nanoid } from "nanoid";
+import { computeAutoLayout } from "../utils/autoLayout";
 
 export const DiagramContext = createContext(null);
 
@@ -358,6 +359,78 @@ export default function DiagramContextProvider({ children }) {
     }
   };
 
+  const bulkUpdateTables = (tableUpdates, addToHistory = true, message = "") => {
+    if (!tableUpdates || tableUpdates.length === 0) return;
+
+    if (addToHistory) {
+      const elements = [];
+      tableUpdates.forEach(({ id, values }) => {
+        const table = tables.find((t) => t.id === id);
+        if (table && (values.x !== table.x || values.y !== table.y)) {
+          elements.push({
+            id,
+            type: ObjectType.TABLE,
+            undo: { x: table.x, y: table.y },
+            redo: { x: values.x ?? table.x, y: values.y ?? table.y },
+          });
+        }
+      });
+      if (elements.length > 0) {
+        setUndoStack((prev) => [
+          ...prev,
+          {
+            action: Action.MOVE,
+            bulk: true,
+            message: message || t("auto_layout"),
+            elements,
+          },
+        ]);
+        setRedoStack([]);
+      }
+    }
+
+    const updatesMap = new Map(tableUpdates.map((u) => [u.id, u.values]));
+    setTables((prev) =>
+      prev.map((t) => {
+        const update = updatesMap.get(t.id);
+        return update ? { ...t, ...update } : t;
+      }),
+    );
+
+    if (shouldEmit()) {
+      tableUpdates.forEach(({ id, values }) => {
+        emitDelta({
+          target: "table",
+          action: "update",
+          entityId: id,
+          data: [id, values],
+        });
+      });
+    }
+  };
+
+  const autoLayoutDiagram = (options = {}, addToHistory = true) => {
+    if (tables.length === 0) return [];
+    const rels = options.relationshipsOverride || relationships;
+    const positions = computeAutoLayout({
+      tables,
+      relationships: rels,
+      direction: options.direction || "LR",
+      tableWidth: options.tableWidth,
+      showComments: options.showComments,
+      startX: options.startX || 60,
+      startY: options.startY || 60,
+    });
+
+    const updates = positions.map((p) => ({
+      id: p.id,
+      values: { x: p.x, y: p.y },
+    }));
+
+    bulkUpdateTables(updates, addToHistory, options.message || t("auto_layout"));
+    return positions;
+  };
+
   return (
     <DiagramContext.Provider
       value={{
@@ -365,6 +438,8 @@ export default function DiagramContextProvider({ children }) {
         setTables,
         addTable,
         updateTable,
+        bulkUpdateTables,
+        autoLayoutDiagram,
         updateField,
         duplicateField,
         deleteField,

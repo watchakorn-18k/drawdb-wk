@@ -16,6 +16,8 @@ const defaultSettings = {
   tableWidth: tableWidth,
   showDebugCoordinates: false,
   showComments: false,
+  autoLayoutOnConnect: false,
+  autoLayoutDirection: "LR",
 };
 
 export const SettingsContext = createContext({

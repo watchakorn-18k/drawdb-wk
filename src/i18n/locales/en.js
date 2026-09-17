@@ -303,6 +303,12 @@ const en = {
     force_hide: "Force hide",
     primary_key: "Primary key",
     foreign_key: "Foreign key",
+    auto_layout: "Auto Layout",
+    auto_layout_lr: "Auto Layout (Horizontal)",
+    auto_layout_tb: "Auto Layout (Vertical)",
+    auto_layout_grid: "Grid Layout",
+    auto_layout_on_connect: "Auto-arrange when linking",
+    layout_applied: "Layout applied",
   },
 };
 
