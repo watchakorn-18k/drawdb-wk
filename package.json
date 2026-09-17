@@ -7,7 +7,10 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "backend:dev": "npm --prefix backend run dev",
+    "backend:deploy": "npm --prefix backend run deploy",
+    "backend:d1:init": "npm --prefix backend run d1:init:local"
   },
   "dependencies": {
     "@dbml/core": "^3.13.9",
