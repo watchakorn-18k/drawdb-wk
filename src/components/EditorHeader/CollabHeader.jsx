@@ -15,9 +15,11 @@ import {
   IconTick,
   IconUserGroup,
   IconExit,
+  IconComment,
 } from "@douyinfe/semi-icons";
 import useCollab from "../../hooks/useCollab";
 import { useDiagram, useNotes, useAreas, useTypes, useEnums } from "../../hooks";
+import { useHotkeys } from "react-hotkeys-hook";
 
 export default function CollabHeader() {
   const {
@@ -26,10 +28,23 @@ export default function CollabHeader() {
     isConnected,
     peers,
     currentUser,
+    isViewOnly,
+    followingUserId,
+    followUser,
+    unfollowUser,
+    isCommentMode,
+    setIsCommentMode,
+    comments,
     updateUserName,
     startCollabSession,
     leaveCollabSession,
   } = useCollab();
+
+  useHotkeys("c", () => {
+    if (isCollabActive) {
+      setIsCommentMode((prev) => !prev);
+    }
+  });
 
   const { tables, relationships, database } = useDiagram();
   const { notes } = useNotes();
@@ -158,18 +173,43 @@ export default function CollabHeader() {
           Collaborators in session:
         </Typography.Text>
         <div className="flex flex-col gap-1 max-h-32 overflow-y-auto">
-          {allUsers.map((u) => (
-            <div
-              key={u.id}
-              className="flex items-center gap-2 py-1 px-1.5 rounded hover:bg-[var(--semi-color-fill-1)] transition-colors"
-            >
-              <span
-                className="w-3 h-3 rounded-full flex-shrink-0"
-                style={{ backgroundColor: u.color }}
-              />
-              <span className="text-xs truncate">{u.name}</span>
-            </div>
-          ))}
+          {allUsers.map((u) => {
+            const isMe = u.id === currentUser.id;
+            const isFollowingThisUser = followingUserId === u.id;
+
+            return (
+              <div
+                key={u.id}
+                className="flex items-center justify-between gap-2 py-1 px-1.5 rounded hover:bg-[var(--semi-color-fill-1)] transition-colors"
+              >
+                <div className="flex items-center gap-2 truncate">
+                  <span
+                    className="w-3 h-3 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: u.color }}
+                  />
+                  <span className="text-xs truncate">{u.name}</span>
+                </div>
+                {!isMe && (
+                  <Button
+                    size="small"
+                    theme={isFollowingThisUser ? "solid" : "light"}
+                    type={isFollowingThisUser ? "primary" : "tertiary"}
+                    className="!text-[11px] !px-2 !py-0.5 !h-6"
+                    onClick={() => {
+                      if (isFollowingThisUser) {
+                        unfollowUser();
+                      } else {
+                        followUser(u.id);
+                        Toast.success(`Following ${u.name}`);
+                      }
+                    }}
+                  >
+                    {isFollowingThisUser ? "Following" : "Follow"}
+                  </Button>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -188,27 +228,53 @@ export default function CollabHeader() {
   );
 
   return (
-    <Popover content={content} trigger="click" position="bottomRight">
-      <div className="flex items-center gap-2 cursor-pointer py-1.5 px-2.5 rounded-md transition-colors border border-[var(--semi-color-border)] bg-[var(--semi-color-fill-0)] hover:bg-[var(--semi-color-fill-1)] select-none">
-        <span className="relative flex h-2 w-2">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-        </span>
-        <span className="text-xs font-semibold text-[var(--semi-color-text-0)]">
-          Live ({allUsers.length})
-        </span>
-        <AvatarGroup maxCount={3} size="extra-extra-small">
-          {allUsers.map((u) => (
-            <Avatar
-              key={u.id}
-              size="extra-extra-small"
-              style={{ backgroundColor: u.color, color: "#FFFFFF", fontSize: 10 }}
-            >
-              {(u.name || "U")[0].toUpperCase()}
-            </Avatar>
-          ))}
-        </AvatarGroup>
-      </div>
-    </Popover>
+    <div className="flex items-center gap-2">
+      {isViewOnly && (
+        <Tag color="amber" size="small" shape="circle">
+          View only
+        </Tag>
+      )}
+
+      <Popover content={content} trigger="click" position="bottomRight">
+        <div className="flex items-center gap-2 cursor-pointer py-1.5 px-2.5 rounded-md transition-colors border border-[var(--semi-color-border)] bg-[var(--semi-color-fill-0)] hover:bg-[var(--semi-color-fill-1)] select-none">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+          </span>
+          <span className="text-xs font-semibold text-[var(--semi-color-text-0)]">
+            Live ({allUsers.length})
+          </span>
+          <AvatarGroup maxCount={3} size="extra-extra-small">
+            {allUsers.map((u) => {
+              const isFollowed = followingUserId === u.id;
+              return (
+                <Avatar
+                  key={u.id}
+                  size="extra-extra-small"
+                  className={isFollowed ? "ring-2 ring-emerald-500 ring-offset-1" : ""}
+                  style={{ backgroundColor: u.color, color: "#FFFFFF", fontSize: 10 }}
+                >
+                  {(u.name || "U")[0].toUpperCase()}
+                </Avatar>
+              );
+            })}
+          </AvatarGroup>
+        </div>
+      </Popover>
+
+      <Button
+        size="small"
+        theme={isCommentMode ? "solid" : "light"}
+        type={isCommentMode ? "primary" : "tertiary"}
+        icon={<IconComment />}
+        onClick={() => setIsCommentMode(!isCommentMode)}
+        title="Comments (Press C to toggle)"
+        className="!rounded-md"
+      >
+        Comment
+        {comments.filter((c) => !c.resolved).length > 0 &&
+          ` (${comments.filter((c) => !c.resolved).length})`}
+      </Button>
+    </div>
   );
 }

@@ -29,6 +29,8 @@ import {
   useCollab,
 } from "../../hooks";
 import CollabCursors from "./CollabCursors";
+import CollabComments from "./CollabComments";
+import FollowingBanner from "./FollowingBanner";
 import { useTranslation } from "react-i18next";
 import { useEventListener } from "usehooks-ts";
 import { areFieldsCompatible, getTableHeight } from "../../utils/utils";
@@ -84,8 +86,37 @@ export default function Canvas() {
     endX: 0,
     endY: 0,
   });
-  const { emitAwareness, emitCursor, isCollabActive } = useCollab();
+  const {
+    emitAwareness,
+    emitCursor,
+    emitViewport,
+    isCollabActive,
+    isViewOnly,
+    followingUserId,
+    unfollowUser,
+    registerViewportHandler,
+    isCommentMode,
+  } = useCollab();
+  const [draftLocation, setDraftLocation] = useState(null);
   const lastLinkingRef = useRef(false);
+
+  useEffect(() => {
+    registerViewportHandler(({ pan, zoom }) => {
+      setTransform({ pan, zoom });
+    });
+  }, [registerViewportHandler, setTransform]);
+
+  useEffect(() => {
+    if (isCollabActive && !followingUserId) {
+      emitViewport(transform.pan, transform.zoom);
+    }
+  }, [
+    transform.pan,
+    transform.zoom,
+    isCollabActive,
+    followingUserId,
+    emitViewport,
+  ]);
 
   useEffect(() => {
     if (linking) {
@@ -456,6 +487,23 @@ export default function Canvas() {
   const handlePointerDown = (e) => {
     if (!e.isPrimary) return;
 
+    if (followingUserId) {
+      unfollowUser();
+    }
+
+    if (isCommentMode && e.button === 0) {
+      setDraftLocation({
+        x: pointer.spaces.diagram.x,
+        y: pointer.spaces.diagram.y,
+      });
+      return;
+    }
+
+    if (isViewOnly && e.button === 0 && elementPointerDown !== null) {
+      elementPointerDown = null;
+      return;
+    }
+
     // don't pan if the sidesheet for editing a table is open
     if (
       selectedElement.element === ObjectType.TABLE &&
@@ -692,6 +740,10 @@ export default function Canvas() {
     (e) => {
       e.preventDefault();
 
+      if (followingUserId) {
+        unfollowUser();
+      }
+
       if (e.ctrlKey || e.metaKey) {
         // How "eager" the viewport is to
         // center the cursor's coordinates
@@ -844,8 +896,13 @@ export default function Canvas() {
             />
           )}
           <CollabCursors />
+          <CollabComments
+            draftLocation={draftLocation}
+            setDraftLocation={setDraftLocation}
+          />
         </svg>
       </div>
+      <FollowingBanner />
       {settings.showDebugCoordinates && (
         <div className="debug-coordinates fixed flex flex-col flex-wrap gap-6 bg-[rgba(var(--semi-grey-1),var(--tw-bg-opacity))]/40 border border-color bottom-4 right-4 p-4 rounded-xl backdrop-blur-xs pointer-events-none select-none">
           <table className="table-auto grow">

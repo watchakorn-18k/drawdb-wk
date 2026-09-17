@@ -34,17 +34,27 @@ export default function Share({ title, setModal }) {
   const { collabId, isCollabActive, peers, startCollabSession } = useCollab();
   const [collabStarting, setCollabStarting] = useState(false);
 
-  const getCollabUrl = useCallback(() => {
-    const rawBase = import.meta.env.BASE_URL || window.location.pathname || "/";
-    const base = rawBase.endsWith("/") ? rawBase : `${rawBase}/`;
-    return `${window.location.origin}${base}#/editor?collabId=${collabId}`;
-  }, [collabId]);
+  const [collabPermission, setCollabPermission] = useState("edit");
+
+  const getCollabUrl = useCallback(
+    (perm = collabPermission) => {
+      const rawBase = import.meta.env.BASE_URL || window.location.pathname || "/";
+      const base = rawBase.endsWith("/") ? rawBase : `${rawBase}/`;
+      const viewParam = perm === "view" ? "&viewOnly=1" : "";
+      return `${window.location.origin}${base}#/editor?collabId=${collabId}${viewParam}`;
+    },
+    [collabId, collabPermission],
+  );
 
   const copyCollabLink = useCallback(() => {
     navigator.clipboard.writeText(getCollabUrl()).then(() => {
-      Toast.success(t("copied_to_clipboard") || "Collaboration link copied!");
+      Toast.success(
+        collabPermission === "view"
+          ? "View-only link copied to clipboard!"
+          : t("copied_to_clipboard") || "Collaboration link copied!",
+      );
     });
-  }, [getCollabUrl, t]);
+  }, [getCollabUrl, collabPermission, t]);
 
   const handleStartCollab = async () => {
     try {
@@ -300,16 +310,32 @@ export default function Share({ title, setModal }) {
                 : "Share this link to invite others to collaborate and edit this diagram together in real-time."}
             </div>
             {isCollabActive ? (
-              <div className="flex gap-2">
-                <Input value={getCollabUrl()} size="default" readonly />
-                <Button
-                  theme="solid"
-                  type="primary"
-                  icon={<IconLink />}
-                  onClick={copyCollabLink}
-                >
-                  {t("copy_link") || "Copy link"}
-                </Button>
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-[var(--semi-color-text-1)] font-medium">
+                    Link permission:
+                  </span>
+                  <RadioGroup
+                    type="button"
+                    value={collabPermission}
+                    onChange={(e) => setCollabPermission(e.target.value)}
+                    size="small"
+                  >
+                    <Radio value="edit">Can edit</Radio>
+                    <Radio value="view">Can view</Radio>
+                  </RadioGroup>
+                </div>
+                <div className="flex gap-2">
+                  <Input value={getCollabUrl()} size="default" readonly />
+                  <Button
+                    theme="solid"
+                    type="primary"
+                    icon={<IconLink />}
+                    onClick={copyCollabLink}
+                  >
+                    {t("copy_link") || "Copy link"}
+                  </Button>
+                </div>
               </div>
             ) : (
               <Button

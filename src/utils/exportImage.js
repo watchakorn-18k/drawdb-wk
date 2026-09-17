@@ -9,6 +9,7 @@ export function getExportFilter(excludeI = false) {
         ? node.className
         : node.className?.baseVal || "";
     if (className.includes("collab-cursors")) return false;
+    if (className.includes("collab-comments")) return false;
     if (className.includes("debug-coordinates")) return false;
     return true;
   };

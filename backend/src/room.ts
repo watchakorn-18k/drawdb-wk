@@ -4,6 +4,33 @@ export type UserPresence = {
   color: string;
   cursor?: { x: number; y: number } | null;
   linking?: any;
+  viewOnly?: boolean;
+};
+
+export type CommentReply = {
+  id: string;
+  author: {
+    id: string;
+    name: string;
+    color: string;
+  };
+  text: string;
+  createdAt: string;
+};
+
+export type DiagramComment = {
+  id: string;
+  x: number;
+  y: number;
+  author: {
+    id: string;
+    name: string;
+    color: string;
+  };
+  text: string;
+  createdAt: string;
+  resolved?: boolean;
+  replies?: CommentReply[];
 };
 
 export type DiagramState = {
@@ -22,6 +49,7 @@ export class CollabRoom {
   state: DurableObjectState;
   env: any;
   sessions: Map<WebSocket, UserPresence> = new Map();
+  comments: DiagramComment[] = [];
   diagramState: DiagramState = {
     title: "Untitled Diagram",
     database: "generic",
@@ -43,6 +71,10 @@ export class CollabRoom {
       if (stored) {
         this.diagramState = stored;
       }
+      const storedComments = await this.state.storage.get<DiagramComment[]>("comments");
+      if (storedComments) {
+        this.comments = storedComments;
+      }
     });
   }
 
@@ -57,8 +89,11 @@ export class CollabRoom {
       const userId = url.searchParams.get("userId") || crypto.randomUUID().slice(0, 8);
       const name = url.searchParams.get("name") || `User ${userId.slice(0, 4)}`;
       const color = url.searchParams.get("color") || "#1890ff";
+      const viewOnly =
+        url.searchParams.get("viewOnly") === "1" ||
+        url.searchParams.get("viewOnly") === "true";
 
-      const user: UserPresence = { id: userId, name, color, cursor: null };
+      const user: UserPresence = { id: userId, name, color, cursor: null, viewOnly };
 
       this.handleWebSocket(server, user);
 
@@ -72,6 +107,7 @@ export class CollabRoom {
     if (request.method === "GET") {
       return Response.json({
         diagram: this.diagramState,
+        comments: this.comments,
         users: Array.from(this.sessions.values()),
       });
     }
@@ -104,6 +140,7 @@ export class CollabRoom {
       type: "init",
       user,
       diagram: this.diagramState,
+      comments: this.comments,
       users: Array.from(this.sessions.values()),
     };
     ws.send(JSON.stringify(initPayload));
@@ -132,6 +169,16 @@ export class CollabRoom {
             },
             ws,
           );
+        } else if (data.type === "viewport") {
+          this.broadcast(
+            {
+              type: "viewport",
+              userId: user.id,
+              pan: data.pan,
+              zoom: data.zoom,
+            },
+            ws,
+          );
         } else if (data.type === "awareness") {
           if (data.linking !== undefined) {
             user.linking = data.linking;
@@ -145,6 +192,7 @@ export class CollabRoom {
             ws,
           );
         } else if (data.type === "delta") {
+          if (user.viewOnly) return;
           this.applyDelta(data.delta);
           this.broadcast(
             {
@@ -156,6 +204,7 @@ export class CollabRoom {
           );
           this.scheduleSave();
         } else if (data.type === "set_state") {
+          if (user.viewOnly) return;
           this.diagramState = { ...this.diagramState, ...data.state };
           this.broadcast(
             {
@@ -166,6 +215,49 @@ export class CollabRoom {
             ws,
           );
           this.scheduleSave();
+        } else if (data.type === "add_comment") {
+          const newComment: DiagramComment = data.comment;
+          if (newComment && newComment.id) {
+            this.comments.push(newComment);
+            this.state.storage.put("comments", this.comments);
+            this.broadcast({
+              type: "comment_added",
+              comment: newComment,
+            });
+          }
+        } else if (data.type === "reply_comment") {
+          const { commentId, reply } = data;
+          const target = this.comments.find((c) => c.id === commentId);
+          if (target) {
+            target.replies = target.replies || [];
+            target.replies.push(reply);
+            this.state.storage.put("comments", this.comments);
+            this.broadcast({
+              type: "comment_replied",
+              commentId,
+              reply,
+            });
+          }
+        } else if (data.type === "resolve_comment") {
+          const { commentId, resolved } = data;
+          const target = this.comments.find((c) => c.id === commentId);
+          if (target) {
+            target.resolved = Boolean(resolved);
+            this.state.storage.put("comments", this.comments);
+            this.broadcast({
+              type: "comment_resolved",
+              commentId,
+              resolved: target.resolved,
+            });
+          }
+        } else if (data.type === "delete_comment") {
+          const { commentId } = data;
+          this.comments = this.comments.filter((c) => c.id !== commentId);
+          this.state.storage.put("comments", this.comments);
+          this.broadcast({
+            type: "comment_deleted",
+            commentId,
+          });
         }
       } catch (err) {
         console.error("Error processing websocket message:", err);
