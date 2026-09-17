@@ -41,7 +41,9 @@ export default function Share({ title, setModal }) {
   });
 
   const url = useMemo(() => {
-    const baseUrl = window.location.origin + "/editor?shareId=" + gistId;
+    const rawBase = import.meta.env.BASE_URL || window.location.pathname || "/";
+    const base = rawBase.endsWith("/") ? rawBase : `${rawBase}/`;
+    const baseUrl = `${window.location.origin}${base}#/editor?shareId=${gistId}`;
     const params = new URLSearchParams();
     Object.entries(embedSettings).forEach(([key, value]) => {
       if (value) {

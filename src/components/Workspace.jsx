@@ -440,7 +440,14 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
       }
     };
 
-    const shareId = searchParams.get("shareId");
+    let hashSearch = "";
+    if (window.location.hash.includes("?")) {
+      hashSearch = window.location.hash.slice(window.location.hash.indexOf("?"));
+    }
+    const shareId =
+      searchParams.get("shareId") ||
+      new URLSearchParams(window.location.search).get("shareId") ||
+      new URLSearchParams(hashSearch).get("shareId");
     if (shareId) {
       const existingDiagram = await db.diagrams.get({
         loadedFromGistId: shareId,
