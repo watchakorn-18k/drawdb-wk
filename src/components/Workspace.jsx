@@ -95,7 +95,7 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
   const extensions = useMemo(() => extensionValues ?? {}, [extensionValues]);
   const cloudOnly = typeof extensions.cloudSave === "function";
 
-  const { registerRemoteApplier } = useCollab();
+  const { registerRemoteApplier, isCollabActive } = useCollab();
 
   useEffect(() => {
     registerRemoteApplier({
@@ -225,6 +225,12 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
   };
 
   const save = useCallback(async () => {
+    if (isCollabActive) {
+      setSaveState(State.SAVED);
+      setLastSaved(new Date().toLocaleString());
+      return;
+    }
+
     if (searchParams.has("shareId")) {
       searchParams.delete("shareId");
       setSearchParams(searchParams, { replace: true });
@@ -340,6 +346,7 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
     isTemplate,
     loadedDiagramId,
     navigate,
+    isCollabActive,
   ]);
 
   const load = useCallback(async () => {
@@ -581,6 +588,15 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
       return;
     }
 
+    const collabId =
+      searchParams.get("collabId") ||
+      new URLSearchParams(window.location.search).get("collabId") ||
+      new URLSearchParams(hashSearch).get("collabId");
+    if (collabId || isCollabActive) {
+      setShowSelectDbModal(false);
+      return;
+    }
+
     if (!loadedDiagramId) {
       await loadLatestDiagram();
       return;
@@ -616,6 +632,7 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
     isDiagram,
     isTemplate,
     loadedDiagramId,
+    isCollabActive,
   ]);
 
   const returnToCurrentDiagram = async () => {
