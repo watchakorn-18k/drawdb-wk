@@ -26,6 +26,7 @@ import {
   useSaveState,
   useEnums,
   useNavigateWithParams,
+  useCollab,
 } from "../hooks";
 import FloatingControls from "./FloatingControls";
 import { Button, Modal } from "@douyinfe/semi-ui";
@@ -93,6 +94,129 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
   const extensionValues = useContext(ExtensionsContext);
   const extensions = useMemo(() => extensionValues ?? {}, [extensionValues]);
   const cloudOnly = typeof extensions.cloudSave === "function";
+
+  const { registerRemoteApplier } = useCollab();
+
+  useEffect(() => {
+    registerRemoteApplier({
+      applyDelta: (delta) => {
+        if (!delta || !delta.target || !delta.action) return;
+        const { target, action, data } = delta;
+        if (target === "table") {
+          if (action === "create") {
+            const newTable = data[0];
+            setTables((prev) =>
+              prev.some((t) => t.id === newTable.id) ? prev : [...prev, newTable],
+            );
+          } else if (action === "update") {
+            const [id, updatedValues] = data;
+            setTables((prev) =>
+              prev.map((t) => (t.id === id ? { ...t, ...updatedValues } : t)),
+            );
+          } else if (action === "delete") {
+            const [id] = data;
+            setTables((prev) => prev.filter((t) => t.id !== id));
+            setRelationships((prev) =>
+              prev.filter((r) => !(r.startTableId === id || r.endTableId === id)),
+            );
+          }
+        } else if (target === "relationship") {
+          if (action === "create") {
+            const newRel = data[0];
+            setRelationships((prev) =>
+              prev.some((r) => r.id === newRel.id) ? prev : [...prev, newRel],
+            );
+          } else if (action === "update") {
+            const [id, updatedValues] = data;
+            setRelationships((prev) =>
+              prev.map((r) => (r.id === id ? { ...r, ...updatedValues } : r)),
+            );
+          } else if (action === "delete") {
+            const [id] = data;
+            setRelationships((prev) => prev.filter((r) => r.id !== id));
+          }
+        } else if (target === "note") {
+          if (action === "create") {
+            const newNote = data[0];
+            setNotes((prev) =>
+              prev.some((n) => n.id === newNote.id) ? prev : [...prev, newNote],
+            );
+          } else if (action === "update") {
+            const [id, updatedValues] = data;
+            setNotes((prev) =>
+              prev.map((n) => (n.id === id ? { ...n, ...updatedValues } : n)),
+            );
+          } else if (action === "delete") {
+            const [id] = data;
+            setNotes((prev) => prev.filter((n) => n.id !== id));
+          }
+        } else if (target === "area") {
+          if (action === "create") {
+            const newArea = data[0];
+            setAreas((prev) =>
+              prev.some((a) => a.id === newArea.id) ? prev : [...prev, newArea],
+            );
+          } else if (action === "update") {
+            const [id, updatedValues] = data;
+            setAreas((prev) =>
+              prev.map((a) => (a.id === id ? { ...a, ...updatedValues } : a)),
+            );
+          } else if (action === "delete") {
+            const [id] = data;
+            setAreas((prev) => prev.filter((a) => a.id !== id));
+          }
+        } else if (target === "database") {
+          if (action === "update" && data[0]) {
+            setDatabase(data[0]);
+          }
+        } else if (target === "type") {
+          if (action === "create") {
+            setTypes((prev) => [...prev, data[0]]);
+          } else if (action === "update") {
+            const [id, updatedValues] = data;
+            setTypes((prev) =>
+              prev.map((t) => (t.id === id ? { ...t, ...updatedValues } : t)),
+            );
+          } else if (action === "delete") {
+            setTypes((prev) => prev.filter((t) => t.id !== data[0]));
+          }
+        } else if (target === "enum") {
+          if (action === "create") {
+            setEnums((prev) => [...prev, data[0]]);
+          } else if (action === "update") {
+            const [id, updatedValues] = data;
+            setEnums((prev) =>
+              prev.map((e) => (e.id === id ? { ...e, ...updatedValues } : e)),
+            );
+          } else if (action === "delete") {
+            setEnums((prev) => prev.filter((e) => e.id !== data[0]));
+          }
+        }
+      },
+      applySnapshot: (diagram) => {
+        if (!diagram) return;
+        if (diagram.database) setDatabase(diagram.database);
+        if (diagram.title) setTitle(diagram.title);
+        if (Array.isArray(diagram.tables)) setTables(diagram.tables);
+        if (Array.isArray(diagram.relationships))
+          setRelationships(diagram.relationships);
+        if (Array.isArray(diagram.notes)) setNotes(diagram.notes);
+        if (Array.isArray(diagram.subjectAreas)) setAreas(diagram.subjectAreas);
+        if (Array.isArray(diagram.types)) setTypes(diagram.types);
+        if (Array.isArray(diagram.enums)) setEnums(diagram.enums);
+      },
+    });
+  }, [
+    registerRemoteApplier,
+    setTables,
+    setRelationships,
+    setNotes,
+    setAreas,
+    setTypes,
+    setEnums,
+    setDatabase,
+    setTitle,
+  ]);
 
   const handleResize = (e) => {
     if (!resize) return;

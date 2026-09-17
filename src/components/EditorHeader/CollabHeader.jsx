@@ -1,0 +1,211 @@
+import { useState } from "react";
+import {
+  Avatar,
+  AvatarGroup,
+  Button,
+  Popover,
+  Input,
+  Tag,
+  Toast,
+  Space,
+  Typography,
+} from "@douyinfe/semi-ui";
+import {
+  IconCopy,
+  IconTick,
+  IconUserGroup,
+  IconExit,
+} from "@douyinfe/semi-icons";
+import useCollab from "../../hooks/useCollab";
+import { useDiagram, useNotes, useAreas, useTypes, useEnums } from "../../hooks";
+
+export default function CollabHeader() {
+  const {
+    collabId,
+    isCollabActive,
+    isConnected,
+    peers,
+    currentUser,
+    updateUserName,
+    startCollabSession,
+    leaveCollabSession,
+  } = useCollab();
+
+  const { tables, relationships, database } = useDiagram();
+  const { notes } = useNotes();
+  const { areas } = useAreas();
+  const { types } = useTypes();
+  const { enums } = useEnums();
+
+  const [isStarting, setIsStarting] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [editingName, setEditingName] = useState(currentUser?.name || "");
+
+  const getCollabUrl = () => {
+    const rawBase = import.meta.env.BASE_URL || window.location.pathname || "/";
+    const base = rawBase.endsWith("/") ? rawBase : `${rawBase}/`;
+    return `${window.location.origin}${base}#/editor?collabId=${collabId}`;
+  };
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(getCollabUrl()).then(() => {
+      setCopied(true);
+      Toast.success("คัดลอกลิงก์เรียลไทม์แล้ว!");
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  const handleStartSession = async () => {
+    try {
+      setIsStarting(true);
+      const snapshot = {
+        database,
+        tables,
+        relationships,
+        notes,
+        subjectAreas: areas,
+        types,
+        enums,
+      };
+      await startCollabSession(snapshot);
+      Toast.success("เริ่มเซสชันเรียลไทม์แล้ว! ส่งลิงก์ให้เพื่อนได้เลย");
+    } catch {
+      Toast.error("ไม่สามารถเริ่มเซสชันเรียลไทม์ได้");
+    } finally {
+      setIsStarting(false);
+    }
+  };
+
+  const handleSaveName = () => {
+    if (editingName.trim()) {
+      updateUserName(editingName.trim());
+      Toast.success("อัปเดตชื่อผู้ใช้แล้ว");
+    }
+  };
+
+  if (!isCollabActive) {
+    return (
+      <Button
+        theme="light"
+        type="tertiary"
+        icon={<IconUserGroup />}
+        loading={isStarting}
+        onClick={handleStartSession}
+        className="!rounded-md"
+        title="เริ่มแก้ไขร่วมกันแบบเรียลไทม์ (Live Collaboration)"
+      >
+        Live Collab
+      </Button>
+    );
+  }
+
+  const allUsers = [
+    { id: currentUser.id, name: `${currentUser.name} (คุณ)`, color: currentUser.color },
+    ...peers,
+  ];
+
+  const content = (
+    <div style={{ width: 280, padding: 8 }}>
+      <div className="flex items-center justify-between mb-3 pb-2 border-b border-color">
+        <Space>
+          <span
+            className="w-2.5 h-2.5 rounded-full"
+            style={{ backgroundColor: isConnected ? "#10B981" : "#F59E0B" }}
+          />
+          <Typography.Text strong>
+            {isConnected ? "เชื่อมต่อแบบเรียลไทม์" : "กำลังเชื่อมต่อ..."}
+          </Typography.Text>
+        </Space>
+        <Tag color="green" size="small">
+          {allUsers.length} คน
+        </Tag>
+      </div>
+
+      <div className="mb-3">
+        <Typography.Text type="secondary" size="small" className="block mb-1">
+          ชื่อของคุณ:
+        </Typography.Text>
+        <Space style={{ width: "100%" }}>
+          <Input
+            value={editingName}
+            onChange={(val) => setEditingName(val)}
+            onPressEnter={handleSaveName}
+            size="small"
+          />
+          <Button size="small" icon={<IconTick />} onClick={handleSaveName} />
+        </Space>
+      </div>
+
+      <div className="mb-3">
+        <Typography.Text type="secondary" size="small" className="block mb-1">
+          ลิงก์สำหรับเพื่อนมาร่วมแก้ไข:
+        </Typography.Text>
+        <div className="flex gap-1">
+          <Input value={getCollabUrl()} size="small" readonly />
+          <Button
+            size="small"
+            type="primary"
+            icon={copied ? <IconTick /> : <IconCopy />}
+            onClick={handleCopy}
+          >
+            {copied ? "คัดลอกแล้ว" : "คัดลอก"}
+          </Button>
+        </div>
+      </div>
+
+      <div className="mb-3">
+        <Typography.Text type="secondary" size="small" className="block mb-1">
+          ผู้ใช้งานในขณะนี้:
+        </Typography.Text>
+        <div className="flex flex-col gap-1 max-h-32 overflow-y-auto">
+          {allUsers.map((u) => (
+            <div key={u.id} className="flex items-center gap-2 py-1 px-1.5 rounded hover:bg-slate-100 dark:hover:bg-zinc-800">
+              <span
+                className="w-3 h-3 rounded-full flex-shrink-0"
+                style={{ backgroundColor: u.color }}
+              />
+              <span className="text-xs truncate">{u.name}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="pt-2 border-t border-color text-right">
+        <Button
+          type="danger"
+          theme="borderless"
+          size="small"
+          icon={<IconExit />}
+          onClick={leaveCollabSession}
+        >
+          ออกจากเซสชัน
+        </Button>
+      </div>
+    </div>
+  );
+
+  return (
+    <Popover content={content} trigger="click" position="bottomRight">
+      <div className="flex items-center gap-2 cursor-pointer py-1 px-2.5 rounded-md hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors border border-green-500/30 bg-green-50/50 dark:bg-green-950/20">
+        <span className="relative flex h-2 w-2">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+        </span>
+        <span className="text-xs font-semibold text-green-600 dark:text-green-400">
+          Live ({allUsers.length})
+        </span>
+        <AvatarGroup maxCount={3} size="extra-extra-small">
+          {allUsers.map((u) => (
+            <Avatar
+              key={u.id}
+              size="extra-extra-small"
+              style={{ backgroundColor: u.color, color: "#FFFFFF", fontSize: 10 }}
+            >
+              {(u.name || "U")[0].toUpperCase()}
+            </Avatar>
+          ))}
+        </AvatarGroup>
+      </div>
+    </Popover>
+  );
+}

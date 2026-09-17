@@ -88,6 +88,7 @@ import { deleteFromCache, STORAGE_KEY } from "../../utils/cache";
 import { useLiveQuery } from "dexie-react-hooks";
 import { DateTime } from "luxon";
 import ConfigureCustomTypes from "./ConfigureCustomTypes";
+import CollabHeader from "./CollabHeader";
 
 export default function ControlPanel({
   title,
@@ -1670,6 +1671,7 @@ export default function ControlPanel({
             {header()}
             <div className="flex items-center gap-2 me-7">
               <Slot name="header-actions-start" />
+              {!isTemplate && <CollabHeader />}
               {!isTemplate && (
                 <Button
                   type="primary"

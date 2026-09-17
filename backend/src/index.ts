@@ -1,9 +1,11 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { nanoid } from "nanoid";
+export { CollabRoom } from "./room";
 
 export type Bindings = {
   DB: D1Database;
+  ROOMS: DurableObjectNamespace;
 };
 
 const app = new Hono<{ Bindings: Bindings }>();
@@ -363,6 +365,22 @@ app.get("/gists/:id/file/:file/compare/:versionA/:versionB", async (c) => {
 // Optional email endpoint stub
 app.post("/email/send", async (c) => {
   return c.json({ success: true, message: "Email endpoint stubbed" });
+});
+
+// Real-time Collaboration: WebSocket endpoint for Room
+app.all("/rooms/:roomId/websocket", async (c) => {
+  const roomId = c.req.param("roomId");
+  const id = c.env.ROOMS.idFromName(roomId);
+  const room = c.env.ROOMS.get(id);
+  return room.fetch(c.req.raw);
+});
+
+// Real-time Collaboration: HTTP endpoint for Room snapshot / state
+app.all("/rooms/:roomId", async (c) => {
+  const roomId = c.req.param("roomId");
+  const id = c.env.ROOMS.idFromName(roomId);
+  const room = c.env.ROOMS.get(id);
+  return room.fetch(c.req.raw);
 });
 
 export default app;

@@ -10,6 +10,7 @@ import {
   useNotes,
   useTransform,
   useTypes,
+  useCollab,
 } from "../../../hooks";
 import { databases } from "../../../data/databases";
 import { MODAL } from "../../../data/constants";
@@ -29,6 +30,43 @@ export default function Share({ title, setModal }) {
   const { enums } = useEnums();
   const { transform } = useTransform();
   const [error, setError] = useState(null);
+
+  const { collabId, isCollabActive, peers, startCollabSession } = useCollab();
+  const [collabStarting, setCollabStarting] = useState(false);
+
+  const getCollabUrl = useCallback(() => {
+    const rawBase = import.meta.env.BASE_URL || window.location.pathname || "/";
+    const base = rawBase.endsWith("/") ? rawBase : `${rawBase}/`;
+    return `${window.location.origin}${base}#/editor?collabId=${collabId}`;
+  }, [collabId]);
+
+  const copyCollabLink = useCallback(() => {
+    navigator.clipboard.writeText(getCollabUrl()).then(() => {
+      Toast.success(t("copied_to_clipboard") || "คัดลอกลิงก์เรียลไทม์แล้ว!");
+    });
+  }, [getCollabUrl, t]);
+
+  const handleStartCollab = async () => {
+    try {
+      setCollabStarting(true);
+      const snapshot = {
+        title,
+        database,
+        tables,
+        relationships,
+        notes,
+        subjectAreas: areas,
+        types,
+        enums,
+      };
+      await startCollabSession(snapshot);
+      Toast.success("เริ่มเซสชันเรียลไทม์สำเร็จ! ส่งลิงก์ให้เพื่อนได้เลย");
+    } catch {
+      Toast.error(t("oops_smth_went_wrong"));
+    } finally {
+      setCollabStarting(false);
+    }
+  };
 
   const extensions = useExtensions();
   const customContent = extensions?.["share-modal-content"];
@@ -237,6 +275,42 @@ export default function Share({ title, setModal }) {
                 </div>
               </Collapse.Panel>
             </Collapse>
+          </div>
+          <div className="mt-4 p-3 rounded-lg border border-green-500/30 bg-green-500/5">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-1.5 font-semibold text-sm text-green-600 dark:text-green-400">
+                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                Live Collaboration (เหมือน Figma)
+              </div>
+              {isCollabActive && (
+                <Tag color="green" size="small">
+                  {peers.length + 1} คนในห้อง
+                </Tag>
+              )}
+            </div>
+            <div className="text-xs text-secondary mb-3">
+              {isCollabActive
+                ? "เซสชันเปิดใช้งานอยู่ ลิงก์นี้จะให้เพื่อนเข้ามาร่วมแก้ไขและเห็นเคอร์เซอร์แบบเรียลไทม์"
+                : "แชร์ลิงก์ให้เพื่อนเข้ามาร่วมแก้ไขไดอะแกรมพร้อมกัน และเห็นเคอร์เซอร์เคลื่อนไหวแบบเรียลไทม์"}
+            </div>
+            {isCollabActive ? (
+              <div className="flex gap-2">
+                <Input value={getCollabUrl()} size="default" readonly />
+                <Button theme="solid" type="primary" onClick={copyCollabLink}>
+                  คัดลอกลิงก์
+                </Button>
+              </div>
+            ) : (
+              <Button
+                theme="solid"
+                type="primary"
+                loading={collabStarting}
+                onClick={handleStartCollab}
+                block
+              >
+                🚀 เริ่มเซสชัน Live Collaboration
+              </Button>
+            )}
           </div>
           <div className="text-xs mt-2">{t("share_info")}</div>
           <div className="flex gap-2 mt-3">

@@ -28,6 +28,7 @@ import {
   useSaveState,
   useCollab,
 } from "../../hooks";
+import CollabCursors from "./CollabCursors";
 import { useTranslation } from "react-i18next";
 import { useEventListener } from "usehooks-ts";
 import { areFieldsCompatible, getTableHeight } from "../../utils/utils";
@@ -77,7 +78,7 @@ export default function Canvas() {
     endX: 0,
     endY: 0,
   });
-  const { emitAwareness } = useCollab();
+  const { emitAwareness, emitCursor, isCollabActive } = useCollab();
   const lastLinkingRef = useRef(false);
 
   useEffect(() => {
@@ -310,6 +311,10 @@ export default function Canvas() {
    * @param {PointerEvent} e
    */
   const handlePointerMove = (e) => {
+    if (isCollabActive) {
+      emitCursor(pointer.spaces.diagram.x, pointer.spaces.diagram.y);
+    }
+
     if (selectedElement.open && !layout.sidebar) return;
 
     if (!e.isPrimary) return;
@@ -821,6 +826,7 @@ export default function Canvas() {
               strokeDasharray={10}
             />
           )}
+          <CollabCursors />
         </svg>
       </div>
       {settings.showDebugCoordinates && (

@@ -9,6 +9,7 @@ import TypesContextProvider from "../context/TypesContext";
 import SettingsContextProvider from "../context/SettingsContext";
 import SaveStateContextProvider from "../context/SaveStateContext";
 import EnumsContextProvider from "../context/EnumsContext";
+import CollabContextProvider from "../context/CollabContext";
 import WorkSpace from "../components/Workspace";
 import { useThemedPage } from "../hooks";
 
@@ -16,7 +17,8 @@ export default function Editor() {
   useThemedPage();
 
   return (
-    <SettingsContextProvider>
+    <CollabContextProvider>
+      <SettingsContextProvider>
       <LayoutContextProvider>
         <TransformContextProvider>
           <UndoRedoContextProvider>
@@ -39,5 +41,6 @@ export default function Editor() {
         </TransformContextProvider>
       </LayoutContextProvider>
     </SettingsContextProvider>
+  </CollabContextProvider>
   );
 }
