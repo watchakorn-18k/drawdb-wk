@@ -50,7 +50,7 @@ export default function CollabHeader() {
   const handleCopy = () => {
     navigator.clipboard.writeText(getCollabUrl()).then(() => {
       setCopied(true);
-      Toast.success("คัดลอกลิงก์เรียลไทม์แล้ว!");
+      Toast.success("Collaboration link copied!");
       setTimeout(() => setCopied(false), 2000);
     });
   };
@@ -68,9 +68,9 @@ export default function CollabHeader() {
         enums,
       };
       await startCollabSession(snapshot);
-      Toast.success("เริ่มเซสชันเรียลไทม์แล้ว! ส่งลิงก์ให้เพื่อนได้เลย");
+      Toast.success("Live collaboration session started!");
     } catch {
-      Toast.error("ไม่สามารถเริ่มเซสชันเรียลไทม์ได้");
+      Toast.error("Failed to start live collaboration session");
     } finally {
       setIsStarting(false);
     }
@@ -79,7 +79,7 @@ export default function CollabHeader() {
   const handleSaveName = () => {
     if (editingName.trim()) {
       updateUserName(editingName.trim());
-      Toast.success("อัปเดตชื่อผู้ใช้แล้ว");
+      Toast.success("Display name updated");
     }
   };
 
@@ -92,7 +92,7 @@ export default function CollabHeader() {
         loading={isStarting}
         onClick={handleStartSession}
         className="!rounded-md"
-        title="เริ่มแก้ไขร่วมกันแบบเรียลไทม์ (Live Collaboration)"
+        title="Live Collaboration (Real-time diagram sharing)"
       >
         Live Collab
       </Button>
@@ -100,7 +100,7 @@ export default function CollabHeader() {
   }
 
   const allUsers = [
-    { id: currentUser.id, name: `${currentUser.name} (คุณ)`, color: currentUser.color },
+    { id: currentUser.id, name: `${currentUser.name} (You)`, color: currentUser.color },
     ...peers,
   ];
 
@@ -113,17 +113,17 @@ export default function CollabHeader() {
             style={{ backgroundColor: isConnected ? "#10B981" : "#F59E0B" }}
           />
           <Typography.Text strong>
-            {isConnected ? "เชื่อมต่อแบบเรียลไทม์" : "กำลังเชื่อมต่อ..."}
+            {isConnected ? "Live Connected" : "Connecting..."}
           </Typography.Text>
         </Space>
-        <Tag color="green" size="small">
-          {allUsers.length} คน
+        <Tag color="emerald" size="small">
+          {allUsers.length} online
         </Tag>
       </div>
 
       <div className="mb-3">
         <Typography.Text type="secondary" size="small" className="block mb-1">
-          ชื่อของคุณ:
+          Your display name:
         </Typography.Text>
         <Space style={{ width: "100%" }}>
           <Input
@@ -138,7 +138,7 @@ export default function CollabHeader() {
 
       <div className="mb-3">
         <Typography.Text type="secondary" size="small" className="block mb-1">
-          ลิงก์สำหรับเพื่อนมาร่วมแก้ไข:
+          Invite link:
         </Typography.Text>
         <div className="flex gap-1">
           <Input value={getCollabUrl()} size="small" readonly />
@@ -148,14 +148,14 @@ export default function CollabHeader() {
             icon={copied ? <IconTick /> : <IconCopy />}
             onClick={handleCopy}
           >
-            {copied ? "คัดลอกแล้ว" : "คัดลอก"}
+            {copied ? "Copied" : "Copy"}
           </Button>
         </div>
       </div>
 
       <div className="mb-3">
         <Typography.Text type="secondary" size="small" className="block mb-1">
-          ผู้ใช้งานในขณะนี้:
+          Collaborators in session:
         </Typography.Text>
         <div className="flex flex-col gap-1 max-h-32 overflow-y-auto">
           {allUsers.map((u) => (
@@ -178,7 +178,7 @@ export default function CollabHeader() {
           icon={<IconExit />}
           onClick={leaveCollabSession}
         >
-          ออกจากเซสชัน
+          Leave session
         </Button>
       </div>
     </div>
@@ -186,12 +186,12 @@ export default function CollabHeader() {
 
   return (
     <Popover content={content} trigger="click" position="bottomRight">
-      <div className="flex items-center gap-2 cursor-pointer py-1 px-2.5 rounded-md hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors border border-green-500/30 bg-green-50/50 dark:bg-green-950/20">
+      <div className="flex items-center gap-2 cursor-pointer py-1 px-2.5 rounded-md hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors border border-[var(--semi-color-border)] bg-[var(--semi-color-fill-0)]">
         <span className="relative flex h-2 w-2">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
         </span>
-        <span className="text-xs font-semibold text-green-600 dark:text-green-400">
+        <span className="text-xs font-semibold text-[var(--semi-color-text-0)]">
           Live ({allUsers.length})
         </span>
         <AvatarGroup maxCount={3} size="extra-extra-small">

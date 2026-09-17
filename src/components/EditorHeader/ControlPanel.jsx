@@ -25,6 +25,7 @@ import {
   Popconfirm,
 } from "@douyinfe/semi-ui";
 import { toPng, toJpeg, toSvg } from "html-to-image";
+import { getExportFilter, getSafePixelRatio } from "../../utils/exportImage";
 import {
   jsonToMySQL,
   jsonToPostgreSQL,
@@ -43,7 +44,6 @@ import {
   DB,
   IMPORT_FROM,
   noteWidth,
-  pngExportPixelRatio,
 } from "../../data/constants";
 import jsPDF from "jspdf";
 import { useHotkeys } from "react-hotkeys-hook";
@@ -518,19 +518,37 @@ export default function ControlPanel({
     }));
   };
   const copyAsImage = () => {
-    toPng(document.getElementById("canvas"), {
-      pixelRatio: pngExportPixelRatio,
-    }).then(function (dataUrl) {
-      const blob = dataURItoBlob(dataUrl);
-      navigator.clipboard
-        .write([new ClipboardItem({ "image/png": blob })])
-        .then(() => {
-          Toast.success(t("copied_to_clipboard"));
-        })
-        .catch(() => {
-          Toast.error(t("oops_smth_went_wrong"));
-        });
+    const canvas = document.getElementById("canvas");
+    if (!canvas) return;
+    const ratio = getSafePixelRatio(canvas, 2);
+    const toastKey = "copy_image_progress";
+    Toast.info({
+      id: toastKey,
+      content: t("loading") || "Copying image...",
+      duration: 0,
     });
+    toPng(canvas, {
+      pixelRatio: ratio,
+      skipFonts: true,
+      filter: getExportFilter(),
+    })
+      .then(function (dataUrl) {
+        Toast.close(toastKey);
+        const blob = dataURItoBlob(dataUrl);
+        navigator.clipboard
+          .write([new ClipboardItem({ "image/png": blob })])
+          .then(() => {
+            Toast.success(t("copied_to_clipboard"));
+          })
+          .catch(() => {
+            Toast.error(t("oops_smth_went_wrong"));
+          });
+      })
+      .catch((err) => {
+        console.error("Copy image error:", err);
+        Toast.close(toastKey);
+        Toast.error(t("oops_smth_went_wrong"));
+      });
   };
   const resetView = () =>
     setTransform((prev) => ({ ...prev, zoom: 1, pan: { x: 0, y: 0 } }));
@@ -1143,47 +1161,78 @@ export default function ControlPanel({
           {
             name: "PNG",
             function: () => {
-              toPng(document.getElementById("canvas"), {
-                pixelRatio: pngExportPixelRatio,
-              }).then(function (dataUrl) {
-                setExportData((prev) => ({
-                  ...prev,
-                  data: dataUrl,
-                  extension: "png",
-                }));
-              });
+              const canvas = document.getElementById("canvas");
+              if (!canvas) return;
+              const ratio = getSafePixelRatio(canvas, 2);
               openExportModal(MODAL.IMG);
+              toPng(canvas, {
+                pixelRatio: ratio,
+                skipFonts: true,
+                filter: getExportFilter(),
+              })
+                .then(function (dataUrl) {
+                  setExportData((prev) => ({
+                    ...prev,
+                    data: dataUrl,
+                    extension: "png",
+                  }));
+                })
+                .catch(function (error) {
+                  console.error("Export PNG error:", error);
+                  Toast.error(t("oops_smth_went_wrong"));
+                  setModal(MODAL.NONE);
+                });
             },
           },
           {
             name: "JPEG",
             function: () => {
-              toJpeg(document.getElementById("canvas"), { quality: 0.95 }).then(
-                function (dataUrl) {
+              const canvas = document.getElementById("canvas");
+              if (!canvas) return;
+              const ratio = getSafePixelRatio(canvas, 2);
+              openExportModal(MODAL.IMG);
+              toJpeg(canvas, {
+                quality: 0.95,
+                pixelRatio: ratio,
+                skipFonts: true,
+                filter: getExportFilter(),
+              })
+                .then(function (dataUrl) {
                   setExportData((prev) => ({
                     ...prev,
                     data: dataUrl,
                     extension: "jpeg",
                   }));
-                },
-              );
-              openExportModal(MODAL.IMG);
+                })
+                .catch(function (error) {
+                  console.error("Export JPEG error:", error);
+                  Toast.error(t("oops_smth_went_wrong"));
+                  setModal(MODAL.NONE);
+                });
             },
           },
           {
             name: "SVG",
             function: () => {
-              const filter = (node) => node.tagName !== "i";
-              toSvg(document.getElementById("canvas"), { filter: filter }).then(
-                function (dataUrl) {
+              const canvas = document.getElementById("canvas");
+              if (!canvas) return;
+              openExportModal(MODAL.IMG);
+              toSvg(canvas, {
+                skipFonts: true,
+                filter: getExportFilter(true),
+              })
+                .then(function (dataUrl) {
                   setExportData((prev) => ({
                     ...prev,
                     data: dataUrl,
                     extension: "svg",
                   }));
-                },
-              );
-              openExportModal(MODAL.IMG);
+                })
+                .catch(function (error) {
+                  console.error("Export SVG error:", error);
+                  Toast.error(t("oops_smth_went_wrong"));
+                  setModal(MODAL.NONE);
+                });
             },
           },
           {
@@ -1232,22 +1281,43 @@ export default function ControlPanel({
             name: "PDF",
             function: () => {
               const canvas = document.getElementById("canvas");
+              if (!canvas) return;
               const filename = `${title}_${new Date().toISOString()}`;
-              toJpeg(canvas).then(function (dataUrl) {
-                const doc = new jsPDF("l", "px", [
-                  canvas.offsetWidth,
-                  canvas.offsetHeight,
-                ]);
-                doc.addImage(
-                  dataUrl,
-                  "jpeg",
-                  0,
-                  0,
-                  canvas.offsetWidth,
-                  canvas.offsetHeight,
-                );
-                doc.save(`${filename}.pdf`);
+              const toastKey = "export_pdf_progress";
+              Toast.info({
+                id: toastKey,
+                content: t("loading") || "Exporting PDF...",
+                duration: 0,
               });
+              const ratio = getSafePixelRatio(canvas, 2);
+              toJpeg(canvas, {
+                quality: 0.95,
+                pixelRatio: ratio,
+                skipFonts: true,
+                filter: getExportFilter(),
+              })
+                .then(function (dataUrl) {
+                  Toast.close(toastKey);
+                  const doc = new jsPDF("l", "px", [
+                    canvas.offsetWidth,
+                    canvas.offsetHeight,
+                  ]);
+                  doc.addImage(
+                    dataUrl,
+                    "JPEG",
+                    0,
+                    0,
+                    canvas.offsetWidth,
+                    canvas.offsetHeight,
+                  );
+                  doc.save(`${filename}.pdf`);
+                  Toast.success(t("download") || "PDF downloaded");
+                })
+                .catch(function (error) {
+                  console.error("Export PDF error:", error);
+                  Toast.close(toastKey);
+                  Toast.error(t("oops_smth_went_wrong"));
+                });
             },
           },
           {

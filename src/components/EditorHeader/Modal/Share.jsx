@@ -42,7 +42,7 @@ export default function Share({ title, setModal }) {
 
   const copyCollabLink = useCallback(() => {
     navigator.clipboard.writeText(getCollabUrl()).then(() => {
-      Toast.success(t("copied_to_clipboard") || "คัดลอกลิงก์เรียลไทม์แล้ว!");
+      Toast.success(t("copied_to_clipboard") || "Collaboration link copied!");
     });
   }, [getCollabUrl, t]);
 
@@ -60,7 +60,7 @@ export default function Share({ title, setModal }) {
         enums,
       };
       await startCollabSession(snapshot);
-      Toast.success("เริ่มเซสชันเรียลไทม์สำเร็จ! ส่งลิงก์ให้เพื่อนได้เลย");
+      Toast.success("Live collaboration session started!");
     } catch {
       Toast.error(t("oops_smth_went_wrong"));
     } finally {
@@ -276,28 +276,39 @@ export default function Share({ title, setModal }) {
               </Collapse.Panel>
             </Collapse>
           </div>
-          <div className="mt-4 p-3 rounded-lg border border-green-500/30 bg-green-500/5">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-1.5 font-semibold text-sm text-green-600 dark:text-green-400">
-                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                Live Collaboration (เหมือน Figma)
+          <div className="mt-4 p-3.5 rounded-lg border border-[var(--semi-color-border)] bg-[var(--semi-color-fill-0)]">
+            <div className="flex items-center justify-between mb-1.5">
+              <div className="flex items-center gap-2 font-semibold text-sm text-[var(--semi-color-text-0)]">
+                <span
+                  className={`w-2 h-2 rounded-full ${
+                    isCollabActive
+                      ? "bg-emerald-500 animate-pulse"
+                      : "bg-zinc-400"
+                  }`}
+                />
+                Live Collaboration
               </div>
               {isCollabActive && (
-                <Tag color="green" size="small">
-                  {peers.length + 1} คนในห้อง
+                <Tag color="emerald" size="small">
+                  {peers.length + 1} online
                 </Tag>
               )}
             </div>
-            <div className="text-xs text-secondary mb-3">
+            <div className="text-xs text-[var(--semi-color-text-2)] mb-3">
               {isCollabActive
-                ? "เซสชันเปิดใช้งานอยู่ ลิงก์นี้จะให้เพื่อนเข้ามาร่วมแก้ไขและเห็นเคอร์เซอร์แบบเรียลไทม์"
-                : "แชร์ลิงก์ให้เพื่อนเข้ามาร่วมแก้ไขไดอะแกรมพร้อมกัน และเห็นเคอร์เซอร์เคลื่อนไหวแบบเรียลไทม์"}
+                ? "Live session is active. Anyone with this link can collaborate and edit the diagram in real-time."
+                : "Share this link to invite others to collaborate and edit this diagram together in real-time."}
             </div>
             {isCollabActive ? (
               <div className="flex gap-2">
                 <Input value={getCollabUrl()} size="default" readonly />
-                <Button theme="solid" type="primary" onClick={copyCollabLink}>
-                  คัดลอกลิงก์
+                <Button
+                  theme="solid"
+                  type="primary"
+                  icon={<IconLink />}
+                  onClick={copyCollabLink}
+                >
+                  {t("copy_link") || "Copy link"}
                 </Button>
               </div>
             ) : (
@@ -308,7 +319,7 @@ export default function Share({ title, setModal }) {
                 onClick={handleStartCollab}
                 block
               >
-                🚀 เริ่มเซสชัน Live Collaboration
+                Start Live Session
               </Button>
             )}
           </div>
