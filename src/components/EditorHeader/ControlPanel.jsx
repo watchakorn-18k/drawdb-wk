@@ -11,7 +11,6 @@ import {
   IconRedo,
   IconEdit,
   IconShareStroked,
-  IconCommentStroked,
 } from "@douyinfe/semi-icons";
 import { Link, useMatch, useParams } from "react-router-dom";
 import icon from "../../assets/icon_dark_64.png";
@@ -69,7 +68,12 @@ import {
 } from "../../hooks";
 import { enterFullscreen, exitFullscreen } from "../../utils/fullscreen";
 import { dataURItoBlob } from "../../utils/utils";
-import { IconAddArea, IconAddNote, IconAddTable } from "../../icons";
+import {
+  IconAddArea,
+  IconAddNote,
+  IconAddTable,
+  IconAddComment,
+} from "../../icons";
 import LayoutDropdown from "./LayoutDropdown";
 import Sidesheet from "./SideSheet/Sidesheet";
 import Modal from "./Modal/Modal";
@@ -1957,7 +1961,7 @@ export default function ControlPanel({
                 }`}
                 onClick={() => setIsCommentMode(!isCommentMode)}
               >
-                <IconCommentStroked />
+                <IconAddComment />
               </button>
             </Tooltip>
           )}
