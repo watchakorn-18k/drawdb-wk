@@ -11,6 +11,7 @@ import {
   IconRedo,
   IconEdit,
   IconShareStroked,
+  IconCommentStroked,
 } from "@douyinfe/semi-icons";
 import { Link, useMatch, useParams } from "react-router-dom";
 import icon from "../../assets/icon_dark_64.png";
@@ -90,6 +91,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { DateTime } from "luxon";
 import ConfigureCustomTypes from "./ConfigureCustomTypes";
 import CollabHeader from "./CollabHeader";
+import useCollab from "../../hooks/useCollab";
 
 export default function ControlPanel({
   title,
@@ -149,6 +151,7 @@ export default function ControlPanel({
   const isTemplate = useMatch("/editor/templates/:id");
   const navigate = useNavigateWithParams();
   const extensions = useExtensions();
+  const { isCollabActive, isCommentMode, setIsCommentMode } = useCollab();
 
   const undo = () => {
     if (undoStack.length === 0) return;
@@ -1944,6 +1947,20 @@ export default function ControlPanel({
               <IconAddNote />
             </button>
           </Tooltip>
+          {isCollabActive && (
+            <Tooltip content="Comment (C)" position="bottom">
+              <button
+                className={`py-1 px-2 hover-2 rounded-sm flex items-center ${
+                  isCommentMode
+                    ? "!text-[var(--semi-color-primary)] bg-[var(--semi-color-fill-1)] ring-1 ring-[var(--semi-color-primary)]"
+                    : ""
+                }`}
+                onClick={() => setIsCommentMode(!isCommentMode)}
+              >
+                <IconCommentStroked />
+              </button>
+            </Tooltip>
+          )}
           <Divider layout="vertical" margin="8px" />
           <Dropdown
             position="bottomLeft"

@@ -15,7 +15,7 @@ import {
   IconTick,
   IconUserGroup,
   IconExit,
-  IconComment,
+  IconCommentStroked,
 } from "@douyinfe/semi-icons";
 import useCollab from "../../hooks/useCollab";
 import { useDiagram, useNotes, useAreas, useTypes, useEnums } from "../../hooks";
@@ -263,17 +263,24 @@ export default function CollabHeader() {
       </Popover>
 
       <Button
-        size="small"
-        theme={isCommentMode ? "solid" : "light"}
-        type={isCommentMode ? "primary" : "tertiary"}
-        icon={<IconComment />}
+        size="default"
+        theme="light"
+        type="primary"
+        icon={<IconCommentStroked />}
         onClick={() => setIsCommentMode(!isCommentMode)}
         title="Comments (Press C to toggle)"
-        className="!rounded-md"
+        className={`!text-base !pe-5 !ps-4 !py-[18px] !rounded-md transition-all ${
+          isCommentMode
+            ? "!border-[var(--semi-color-primary)] !bg-[var(--semi-color-primary-light-active)] font-medium"
+            : ""
+        }`}
       >
         Comment
-        {comments.filter((c) => !c.resolved).length > 0 &&
-          ` (${comments.filter((c) => !c.resolved).length})`}
+        {comments.filter((c) => !c.resolved).length > 0 && (
+          <span className="ms-1.5 px-1.5 py-0.5 text-xs rounded-full bg-[var(--semi-color-primary)] text-white font-semibold">
+            {comments.filter((c) => !c.resolved).length}
+          </span>
+        )}
       </Button>
     </div>
   );
